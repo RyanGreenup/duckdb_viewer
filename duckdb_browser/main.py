@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLineEdit,
     QHeaderView,
+    QAbstractItemView,
 )
 from typing import List, Optional, Union, cast, overload
 from PySide6.QtCore import (
