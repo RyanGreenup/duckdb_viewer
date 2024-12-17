@@ -24,17 +24,21 @@ from PySide6.QtCharts import (
 from PySide6.QtGui import QColor
 import pandas as pd
 import numpy as np
-from typing import Optional, List, Tuple, Dict, Union, TypeVar
+from typing import Optional, List, Tuple, Dict, Union, TypeVar, Any
 from numpy.typing import NDArray
 from enum import Enum, auto
 from pandas import Series
 
 T = TypeVar("T")
+DataType = Union[int, float, str]
 
 ChartAxis = Union[QValueAxis, QBarCategoryAxis]
 
 # Custom type for the return value of _convert_to_numeric_or_categorical
 NumericOrCategoricalResult = Tuple[Series[Union[int, float]], Optional[List[str]]]
+
+# Custom type for color map
+ColorMap = Dict[Union[str, float], QColor]
 
 
 class CustomToolTip(QWidget):
@@ -387,7 +391,7 @@ class PlottingWidget(QWidget):
             series.append(box_set)
             self.chart.addSeries(series)
 
-    def _create_box_set(self, data: pd.Series) -> QBoxSet:
+    def _create_box_set(self, data: Series[DataType]) -> QBoxSet:
         q1 = float(np.percentile(data, 25))
         median = float(np.median(data))
         q3 = float(np.percentile(data, 75))
@@ -396,10 +400,8 @@ class PlottingWidget(QWidget):
         upper_bound = float(q3 + 1.5 * iqr)
         return QBoxSet(lower_bound, q1, median, q3, upper_bound)
 
-    ColorMap = Dict[Union[str, float], QColor]
-
     def _get_color_map(
-        self, unique_colors: Union[NDArray, List[Union[str, float]]]
+        self, unique_colors: Union[NDArray[Any], List[Union[str, float]]]
     ) -> ColorMap:
         return {
             str(color): QColor(
