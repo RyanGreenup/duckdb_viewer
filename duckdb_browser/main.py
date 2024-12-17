@@ -206,8 +206,6 @@ class MainWindow(QMainWindow):
 
         # Create and set up the table view
         self.table_view = QTableView()
-        self.table_model = DuckDBTableModel(self.con, "test")  # Default to "test" table
-        self.table_view.setModel(self.table_model)
         self.table_view.setSortingEnabled(True)
 
         # Add views to splitter
@@ -223,10 +221,19 @@ class MainWindow(QMainWindow):
         # Set central widget
         self.setCentralWidget(main_widget)
 
+        # Load the first table if it exists
+        self.load_first_table()
+
+    def load_first_table(self) -> None:
+        if self.sidebar_model.rowCount() > 0:
+            first_table_index = self.sidebar_model.index(0, 0)
+            self.on_sidebar_clicked(first_table_index)
+
     def on_sidebar_clicked(self, index: QModelIndex) -> None:
         table_name = self.sidebar_model.data(index, Qt.ItemDataRole.DisplayRole)
         self.table_model = DuckDBTableModel(self.con, table_name)
         self.table_view.setModel(self.table_model)
+        self.sidebar.setCurrentIndex(index)
 
 
 def main(db_path: str = "duckdb_browser.db") -> None:
