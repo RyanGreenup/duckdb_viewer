@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QAbstractItemView,
 )
-from typing import List, Optional, cast
+from typing import List, Optional
 from PySide6.QtCore import (
     Qt,
     QModelIndex,
