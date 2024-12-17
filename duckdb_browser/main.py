@@ -208,13 +208,13 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
 class TableWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self._layout = QVBoxLayout(self)
+        self._main_layout = QVBoxLayout(self)
         self.filter_widget = QWidget(self)
         self.filter_layout = QHBoxLayout(self.filter_widget)
         self.filter_layout.setContentsMargins(0, 0, 0, 0)
         self.table_view = QTableView(self)
-        self._layout.addWidget(self.filter_widget)
-        self._layout.addWidget(self.table_view)
+        self._main_layout.addWidget(self.filter_widget)
+        self._main_layout.addWidget(self.table_view)
 
     def clear_filters(self) -> None:
         while self.filter_layout.count():
@@ -228,9 +228,8 @@ class TableWidget(QWidget):
         self.filter_layout.addWidget(line_edit)
         return line_edit
 
-    @property
-    def layout(self) -> QVBoxLayout:
-        return self._layout
+    def get_main_layout(self) -> QVBoxLayout:
+        return self._main_layout
 
 
 class MainWindow(QMainWindow):
@@ -335,6 +334,9 @@ class MainWindow(QMainWindow):
         # Adjust column widths
         header = self.table_widget.table_view.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
+        # Update the main layout
+        self.table_widget.get_main_layout().update()
 
     def apply_filter(self, text: str, column: int) -> None:
         self.table_model.set_filter(column, text)
