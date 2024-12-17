@@ -28,7 +28,9 @@ QtAlignment = Union[Qt.AlignmentFlag, Qt.Alignment]
 class CustomHeaderView(QHeaderView):
     def __init__(self, orientation: Qt.Orientation, parent: Optional[QWidget] = None):
         super().__init__(orientation, parent)
-        self.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.setDefaultAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
         self.setSectionsClickable(True)
         self.setSectionsMovable(False)
         self.setStretchLastSection(True)
@@ -54,7 +56,13 @@ class CustomHeaderView(QHeaderView):
 
 
 class CustomLineEditStyle(QProxyStyle):
-    def drawPrimitive(self, element: QStyle.PrimitiveElement, option: QStyleOption, painter: QPainter, widget: Optional[QWidget] = None) -> None:
+    def drawPrimitive(
+        self,
+        element: QStyle.PrimitiveElement,
+        option: QStyleOption,
+        painter: QPainter,
+        widget: Optional[QWidget] = None,
+    ) -> None:
         if element == QStyle.PrimitiveElement.PE_PanelLineEdit:
             painter.save()
             painter.setPen(QColor("#ccc"))
