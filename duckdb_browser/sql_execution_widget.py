@@ -18,7 +18,6 @@ from PySide6.QtGui import (
     QFont,
     QTextCursor,
 )
-from PySide6.QtCore import Qt
 from enum import Enum
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
