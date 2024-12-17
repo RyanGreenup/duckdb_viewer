@@ -41,12 +41,12 @@ class CustomHeaderView(QHeaderView):
                 self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
         super().mouseMoveEvent(e)
 
-    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
-        if self.isOnSectionResizeArea(event.position().toPoint()):
-            section = self.logicalIndexAt(event.position().toPoint())
+    def mouseDoubleClickEvent(self, e: QMouseEvent) -> None:
+        if self.isOnSectionResizeArea(e.position().toPoint()):
+            section = self.logicalIndexAt(e.position().toPoint())
             self.resizeSection(section, self.sizeHintForColumn(section))
         else:
-            super().mouseDoubleClickEvent(event)
+            super().mouseDoubleClickEvent(e)
 
     def isOnSectionResizeArea(self, pos: QPoint) -> bool:
         visual_index = self.visualIndexAt(pos.x())
