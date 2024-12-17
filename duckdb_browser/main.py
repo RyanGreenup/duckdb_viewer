@@ -12,13 +12,14 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QHeaderView,
 )
-from typing import List, Optional, Union, cast
+from typing import List, Optional, Union, cast, overload
 from PySide6.QtCore import (
     QPersistentModelIndex,
     Qt,
     QAbstractTableModel,
     QModelIndex,
     QAbstractItemModel,
+    QObject,
 )
 from typing import Any, Tuple
 import duckdb
@@ -134,11 +135,22 @@ class TableListModel(QAbstractItemModel):
             return self.createIndex(row, column, child_item)
         return QModelIndex()
 
-    def parent(self, index: Union[QModelIndex, QPersistentModelIndex]) -> QModelIndex:  # type: ignore [fn_QModelIndex.parent]
-        if not index.isValid():
+    @overload
+    def parent(self) -> QObject:
+        ...
+
+    @overload
+    def parent(self, child: Union[QModelIndex, QPersistentModelIndex]) -> QModelIndex:
+        ...
+
+    def parent(self, child: Union[QModelIndex, QPersistentModelIndex, None] = None) -> Union[QObject, QModelIndex]:
+        if child is None:
+            return super().parent()
+        
+        if not child.isValid():
             return QModelIndex()
 
-        child_item = index.internalPointer()
+        child_item: DatabaseItem = child.internalPointer()
         parent_item = child_item.parent
 
         if parent_item == self.root:
