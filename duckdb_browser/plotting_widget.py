@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet, QValueAxis, QBoxPlotSeries
+from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet, QValueAxis, QBoxPlotSeries, QBoxSet
 from PySide6.QtGui import QPainter
 import pandas as pd
 import numpy as np
