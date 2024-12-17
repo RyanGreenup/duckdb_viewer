@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 
 def get_complete_schema(con: duckdb.DuckDBPyConnection) -> Dict[str, Any]:
     try:
-        schema = {}
+        schema: Dict[str, Dict[str, Any]] = {}
 
         # Get all tables with their columns and primary key information
         tables_info = con.execute("""
