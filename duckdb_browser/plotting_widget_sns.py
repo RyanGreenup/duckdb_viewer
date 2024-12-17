@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import seaborn as sns
 import pandas as pd
-from typing import Optional, List
+from typing import Optional, List, Literal
 from matplotlib.axes import Axes
 
 
@@ -57,9 +57,10 @@ class PlottingWidget(QWidget):
         self.plot_type_combo.setStyleSheet(style)
 
         # Set size policy to expand horizontally
-        self.x_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.y_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.plot_type_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.x_combo.setSizePolicy(size_policy)
+        self.y_combo.setSizePolicy(size_policy)
+        self.plot_type_combo.setSizePolicy(size_policy)
 
         combo_layout = QHBoxLayout()
         combo_layout.addWidget(QLabel("Plot Type:"))
@@ -70,12 +71,12 @@ class PlottingWidget(QWidget):
         combo_layout.addWidget(self.y_combo)
         combo_layout.addWidget(self.update_button)
         self.update_button.hide()  # Hide the update button as it's no longer needed
-        combo_layout.setAlignment(Qt.AlignTop)
+        combo_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         combo_layout.setSpacing(10)
         self._layout.addLayout(combo_layout)
 
         self.figure: Figure = Figure(figsize=(5, 4), dpi=100)
-        self.canvas: FigureCanvas = FigureCanvas(self.figure)  # type: ignore [no-untyped-call]
+        self.canvas = FigureCanvas(self.figure)
         self._layout.addWidget(self.canvas)
 
         # Set Seaborn style
@@ -114,7 +115,7 @@ class PlottingWidget(QWidget):
         self.figure.clear()
         ax: Axes = self.figure.add_subplot(111)
 
-        plot_type = self.plot_type_combo.currentText()
+        plot_type: Literal["Scatter", "Line", "Bar"] = self.plot_type_combo.currentText()
 
         if plot_type == "Scatter":
             sns.scatterplot(data=self.data, x=x_col, y=y_col, ax=ax)
@@ -126,4 +127,4 @@ class PlottingWidget(QWidget):
         ax.set_title(f"{plot_type} Plot: {x_col} vs {y_col}")
         ax.tick_params(axis="x", rotation=45)
         self.figure.tight_layout()
-        self.canvas.draw_idle()  # type: ignore [no-untyped-call]
+        self.canvas.draw_idle()
