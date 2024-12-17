@@ -97,9 +97,13 @@ class SQLTextEdit(QTextEdit):
                 return
             elif event.key() == Qt.Key_N and event.modifiers() & Qt.ControlModifier:
                 self.completer.setCurrentRow(self.completer.currentRow() + 1)
+                self.completer.popup().setCurrentIndex(self.completer.currentIndex())
+                event.accept()
                 return
             elif event.key() == Qt.Key_P and event.modifiers() & Qt.ControlModifier:
                 self.completer.setCurrentRow(self.completer.currentRow() - 1)
+                self.completer.popup().setCurrentIndex(self.completer.currentIndex())
+                event.accept()
                 return
 
         super().keyPressEvent(event)
