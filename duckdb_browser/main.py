@@ -309,7 +309,7 @@ class FilterHeader(QHeaderView):
         super().__init__(Qt.Orientation.Horizontal, parent)
         self.setSectionsClickable(True)
         self.setSortIndicatorShown(True)
-        self.filter_widgets = []
+        self.filter_widgets = []  # Initialize filter_widgets here
 
     def setFilterWidgets(self, count):
         self.filter_widgets = [QLineEdit(self) for _ in range(count)]
@@ -333,13 +333,14 @@ class FilterHeader(QHeaderView):
         self.adjustPositions()
 
     def adjustPositions(self):
-        for index, widget in enumerate(self.filter_widgets):
-            widget.setGeometry(
-                self.sectionPosition(index),
-                self.height() - widget.height(),
-                self.sectionSize(index),
-                widget.height()
-            )
+        if hasattr(self, 'filter_widgets') and self.filter_widgets:
+            for index, widget in enumerate(self.filter_widgets):
+                widget.setGeometry(
+                    self.sectionPosition(index),
+                    self.height() - widget.height(),
+                    self.sectionSize(index),
+                    widget.height()
+                )
 
     def filterText(self, index):
         if 0 <= index < len(self.filter_widgets):
