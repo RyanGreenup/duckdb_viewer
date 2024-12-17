@@ -267,7 +267,7 @@ class PlottingWidget(QWidget):
         self, data: pd.Series
     ) -> NumericOrCategoricalResult:
         if data.dtype == "object":
-            categories = data.unique().tolist()
+            categories: List[str] = [str(cat) for cat in data.unique().tolist()]
             return pd.Series(pd.Categorical(data).codes, dtype=int), categories
         else:
             return pd.to_numeric(data, errors="coerce"), None
