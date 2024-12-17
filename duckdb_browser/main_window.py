@@ -244,22 +244,6 @@ class MainWindow(QMainWindow):
         exit_action = file_menu.addAction("E&xit")
         exit_action.triggered.connect(self.close)
 
-    def open_database(self) -> None:
-        file_dialog = QFileDialog(self)
-        file_dialog.setNameFilter("DuckDB files (*.db);;All files (*)")
-        if file_dialog.exec():
-            selected_files = file_dialog.selectedFiles()
-            if selected_files:
-                new_db_path = selected_files[0]
-                self.db_path = new_db_path
-                self.con.close()
-                self.con = create_connection(db_path=self.db_path)
-                self.sidebar_model = TableListModel(self.con)
-                self.sidebar.setModel(self.sidebar_model)
-                self.load_first_table()
-                self.status_bar.showMessage(f"Opened database: {self.db_path}")
-                self.database_changed.emit(self.db_path)
-
         # Edit menu
         edit_menu = QMenu("&Edit", self)
         menu_bar.addMenu(edit_menu)
@@ -275,6 +259,22 @@ class MainWindow(QMainWindow):
         # Add actions to Help menu
         about_action = help_menu.addAction("&About")
         about_action.triggered.connect(self.show_about_dialog)
+
+    def open_database(self) -> None:
+        file_dialog = QFileDialog(self)
+        file_dialog.setNameFilter("DuckDB files (*.db);;All files (*)")
+        if file_dialog.exec():
+            selected_files = file_dialog.selectedFiles()
+            if selected_files:
+                new_db_path = selected_files[0]
+                self.db_path = new_db_path
+                self.con.close()
+                self.con = create_connection(db_path=self.db_path)
+                self.sidebar_model = TableListModel(self.con)
+                self.sidebar.setModel(self.sidebar_model)
+                self.load_first_table()
+                self.status_bar.showMessage(f"Opened database: {self.db_path}")
+                self.database_changed.emit(self.db_path)
 
     def clear_all_filters(self) -> None:
         self.table_widget.clear_filters()
