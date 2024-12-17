@@ -393,7 +393,7 @@ class PlottingWidget(QWidget):
             series.append(box_set)
             self.chart.addSeries(series)
 
-    def _create_box_set(self, data: Series[Union[int, float]]) -> QBoxSet:
+    def _create_box_set(self, data: pd.Series[Union[int, float]]) -> QBoxSet:
         q1 = float(np.percentile(data, 25))
         median = float(np.median(data))
         q3 = float(np.percentile(data, 75))
