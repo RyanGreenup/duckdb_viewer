@@ -54,3 +54,23 @@ def get_complete_schema(con: duckdb.DuckDBPyConnection) -> Dict[str, Any]:
     except Exception as e:
         print(f"Error retrieving schema: {str(e)}")
         return {}
+
+def generate_create_table_statements(schema: Dict[str, Any]) -> List[str]:
+    create_statements = []
+    
+    for table_name, table_info in schema.items():
+        columns = []
+        for column in table_info['columns']:
+            column_def = f"{column['name']} {column['type']}"
+            if column['notnull']:
+                column_def += " NOT NULL"
+            columns.append(column_def)
+        
+        primary_key = ""
+        if table_info['primary_keys']:
+            primary_key = f", PRIMARY KEY ({', '.join(table_info['primary_keys'])})"
+        
+        create_statement = f"CREATE TABLE {table_name} (\n    {',\n    '.join(columns)}{primary_key}\n);"
+        create_statements.append(create_statement)
+    
+    return create_statements
