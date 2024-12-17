@@ -15,6 +15,7 @@ from PySide6.QtCore import (
     QAbstractTableModel,
     QModelIndex,
     QAbstractItemModel,
+    QObject,
 )
 import duckdb
 from duckdb import DuckDBPyConnection
@@ -65,7 +66,7 @@ class TableListModel(QAbstractItemModel):
             return self.createIndex(row, column)
         return QModelIndex()
 
-    def parent(self, index: Union[QModelIndex, QPersistentModelIndex]) -> QModelIndex:
+    def parent(self, index: QModelIndex) -> QModelIndex:
         return QModelIndex()
 
 
