@@ -1,22 +1,23 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import seaborn as sns
 import pandas as pd
+from typing import Optional
 
 
 class PlottingWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.layout = QVBoxLayout(self)
+        self._layout = QVBoxLayout(self)
         self.figure = Figure(figsize=(5, 4), dpi=100)
         self.canvas = FigureCanvas(self.figure)
-        self.layout.addWidget(self.canvas)
+        self._layout.addWidget(self.canvas)
 
         # Set Seaborn style
         sns.set_theme(style="whitegrid")
 
-    def plot_data(self, data: pd.DataFrame):
+    def plot_data(self, data: pd.DataFrame) -> None:
         self.figure.clear()
         ax = self.figure.add_subplot(111)
 
