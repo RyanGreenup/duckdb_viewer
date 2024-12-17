@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QPalette, QFont
+from PySide6.QtGui import QFontWeight
+from enum import Enum
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
 from model_table import DuckDBTableModel
@@ -16,34 +18,37 @@ from pygments.lexers import SqlLexer
 from pygments.token import Token
 
 
-class SQLSyntaxHighlighter(QSyntaxHighlighter):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.lexer = SqlLexer()
-        self.styles = self.generate_styles()
+class FontStyle(Enum):
+    NORMAL = 1
+    BOLD = 2
+    ITALIC = 3
 
-    def generate_styles(self):
-        styles = {}
-        styles[Token.Keyword] = self.format_for_token(Token.Keyword, "#007020", "bold")
+class SQLSyntaxHighlighter(QSyntaxHighlighter):
+    def __init__(self, parent: QTextEdit) -> None:
+        super().__init__(parent)
+        self.lexer: SqlLexer = SqlLexer()
+        self.styles: dict[Token, QTextCharFormat] = self.generate_styles()
+
+    def generate_styles(self) -> dict[Token, QTextCharFormat]:
+        styles: dict[Token, QTextCharFormat] = {}
+        styles[Token.Keyword] = self.format_for_token(Token.Keyword, "#007020", FontStyle.BOLD)
         styles[Token.String] = self.format_for_token(Token.String, "#4070a0")
         styles[Token.Number] = self.format_for_token(Token.Number, "#40a070")
         styles[Token.Operator] = self.format_for_token(Token.Operator, "#666666")
         styles[Token.Punctuation] = self.format_for_token(Token.Punctuation, "#666666")
-        styles[Token.Comment] = self.format_for_token(
-            Token.Comment, "#60a0b0", "italic"
-        )
+        styles[Token.Comment] = self.format_for_token(Token.Comment, "#60a0b0", FontStyle.ITALIC)
         return styles
 
-    def format_for_token(self, token, color, font_style=None):
+    def format_for_token(self, token: Token, color: str, font_style: FontStyle = FontStyle.NORMAL) -> QTextCharFormat:
         text_format = QTextCharFormat()
         text_format.setForeground(QColor(color))
-        if font_style == "bold":
-            text_format.setFontWeight(QFont.Bold)
-        elif font_style == "italic":
+        if font_style == FontStyle.BOLD:
+            text_format.setFontWeight(QFontWeight.Bold)
+        elif font_style == FontStyle.ITALIC:
             text_format.setFontItalic(True)
         return text_format
 
-    def highlightBlock(self, text):
+    def highlightBlock(self, text: str) -> None:
         for token, value in lex(text, self.lexer):
             if token in self.styles:
                 self.setFormat(
@@ -59,7 +64,7 @@ class SQLTextEdit(QTextEdit):
 
     def set_background_color(self, color: QColor) -> None:
         palette = self.palette()
-        palette.setColor(QPalette.Base, color)
+        palette.setColor(QPalette.ColorRole.Base, color)
         self.setPalette(palette)
 
 
