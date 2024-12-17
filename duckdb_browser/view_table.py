@@ -41,6 +41,13 @@ class CustomHeaderView(QHeaderView):
                 self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
         super().mouseMoveEvent(e)
 
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        if self.isOnSectionResizeArea(event.position().toPoint()):
+            section = self.logicalIndexAt(event.position().toPoint())
+            self.resizeSection(section, self.sizeHintForColumn(section))
+        else:
+            super().mouseDoubleClickEvent(event)
+
     def isOnSectionResizeArea(self, pos: QPoint) -> bool:
         visual_index = self.visualIndexAt(pos.x())
         if visual_index == -1:
@@ -144,11 +151,15 @@ class TableWidget(QWidget):
         self.custom_header = CustomHeaderView(
             Qt.Orientation.Horizontal, self.table_view
         )
+        self.custom_header.sizeHintForColumn = self.sizeHintForColumn
         self.table_view.setHorizontalHeader(self.custom_header)
 
         self.table_view.verticalHeader().setVisible(False)  # Hide vertical header
         self._main_layout.addWidget(self.table_view)
         self.header_widgets: List[CustomHeaderWidget] = []
+
+    def sizeHintForColumn(self, column: int) -> int:
+        return self.calculate_column_width(column)
 
     def set_model(self, model: QAbstractItemModel) -> None:
         self.table_view.setModel(model)
