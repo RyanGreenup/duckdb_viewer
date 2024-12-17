@@ -15,7 +15,6 @@ from PySide6.QtCore import (
     QAbstractTableModel,
     QModelIndex,
     QAbstractItemModel,
-    QObject,
 )
 import duckdb
 from duckdb import DuckDBPyConnection
@@ -183,7 +182,7 @@ class MainWindow(QMainWindow):
         main_layout = QVBoxLayout(main_widget)
 
         # Create splitter
-        splitter = QSplitter(Qt.Horizontal)
+        splitter = QSplitter(Qt.Orientation.Horizontal)
 
         # Create and set up the sidebar tree view
         self.sidebar = QTreeView()
