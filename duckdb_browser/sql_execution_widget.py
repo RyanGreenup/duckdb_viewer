@@ -6,9 +6,8 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QPushButton,
     QCompleter,
-    QShortcut,
 )
-from PySide6.QtGui import QKeySequence
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtCore import Qt, QStringListModel
 from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtGui import (
