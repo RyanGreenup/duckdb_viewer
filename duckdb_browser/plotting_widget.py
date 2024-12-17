@@ -167,7 +167,11 @@ class PlottingWidget(QWidget):
         valid_data = valid_data.dropna()
 
         # Handle empty color column
-        if color_col == "None" or (color_col in valid_data and valid_data['color'].empty):
+        if color_col == "None":
+            color_col = None
+        elif color_col not in valid_data.columns:
+            color_col = None
+        elif valid_data['color'].empty:
             color_col = None
 
         match plot_type:
@@ -313,6 +317,9 @@ class PlottingWidget(QWidget):
         return {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
 
     def _set_axis_labels(self, x_axis, y_axis, plot_type, x_col, y_col, valid_data, color_col, x_categories, y_categories):
+        if x_axis is None or y_axis is None:
+            return
+
         x_axis.setTitleText(str(x_col))
         y_axis.setTitleText(str(y_col))
 
@@ -339,7 +346,8 @@ class PlottingWidget(QWidget):
                 self._set_categories(y_axis, y_categories)
 
         # Rotate x-axis labels by 45 degrees
-        x_axis.setLabelsAngle(-45)
+        if isinstance(x_axis, QBarCategoryAxis):
+            x_axis.setLabelsAngle(-45)
 
     def _set_categories(self, axis, categories):
         if isinstance(axis, QValueAxis):
