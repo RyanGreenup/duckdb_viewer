@@ -32,9 +32,9 @@ class CustomHeaderView(QHeaderView):
         self.setSectionsMovable(False)
         self.setStretchLastSection(True)
         self.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-        self.table_widget: Optional['TableWidget'] = None
+        self.table_widget: Optional["TableWidget"] = None
 
-    def setTableWidget(self, table_widget: 'TableWidget') -> None:
+    def setTableWidget(self, table_widget: "TableWidget") -> None:
         self.table_widget = table_widget
 
     def mouseMoveEvent(self, e: QMouseEvent) -> None:
