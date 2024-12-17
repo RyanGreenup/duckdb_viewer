@@ -4,7 +4,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
     QHeaderView,
-    QLabel,
 )
 from PySide6.QtCore import (
     Qt,
@@ -14,24 +13,20 @@ from PySide6.QtCore import (
 from PySide6.QtCore import Qt as QtCore
 from typing import List, Optional
 
-
 class CustomHeaderWidget(QWidget):
     def __init__(self, column_name: str, parent: Optional[QWidget] = None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
+        layout.setSpacing(0)
         
-        self.label = QLabel(column_name)
         self.filter_input = QLineEdit()
         self.filter_input.setPlaceholderText(f"Filter {column_name}")
         
-        layout.addWidget(self.label)
         layout.addWidget(self.filter_input)
 
     def get_filter_input(self) -> QLineEdit:
         return self.filter_input
-
 
 class TableWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
