@@ -365,27 +365,51 @@ class TableHeader(QHeaderView):
             size.setHeight(size.height() * 2)  # Double the height for two lines
         return size
 
+class CombinedHeaderWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.table_header = TableHeader(Qt.Orientation.Horizontal)
+        self.filter_header = FilterHeader()
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self.table_header)
+        layout.addWidget(self.filter_header)
+
+    def setModel(self, model):
+        self.table_header.setModel(model)
+        self.filter_header.setModel(model)
+        self.filter_header.setFilterWidgets(model.columnCount())
+
+    def setFilterWidgets(self, count):
+        self.filter_header.setFilterWidgets(count)
+
+    def filterWidget(self, index):
+        return self.filter_header.filterWidget(index)
+
+    def clearFilters(self):
+        self.filter_header.clearFilters()
+
 class TableWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._main_layout = QVBoxLayout(self)
         self.table_view = QTableView(self)
-        self.filter_header = FilterHeader(self.table_view)
-        self.table_header = TableHeader(Qt.Orientation.Horizontal, self.table_view)
-        self.table_view.setHorizontalHeader(self.table_header)
+        self.combined_header = CombinedHeaderWidget(self.table_view)
+        self.table_view.setHorizontalHeader(self.combined_header.table_header)
         self.table_view.setVerticalHeader(TableHeader(Qt.Orientation.Vertical, self.table_view))
         self._main_layout.addWidget(self.table_view)
 
     def set_model(self, model):
         self.table_view.setModel(model)
-        self.filter_header.setFilterWidgets(model.columnCount())
-        self.table_view.setHorizontalHeader(self.table_header)
+        self.combined_header.setModel(model)
 
     def clear_filters(self):
-        self.filter_header.clearFilters()
+        self.combined_header.clearFilters()
 
     def add_filter_input(self, column, placeholder):
-        filter_widget = self.filter_header.filterWidget(column)
+        filter_widget = self.combined_header.filterWidget(column)
         if filter_widget:
             filter_widget.setPlaceholderText(placeholder)
         return filter_widget
