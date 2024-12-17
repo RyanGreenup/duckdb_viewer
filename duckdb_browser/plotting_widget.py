@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QPointF
 from PySide6.QtCore import Qt as QtCore
+from PySide6.QtGui import QPainter
 from PySide6.QtCharts import (
     QChart,
     QChartView,
@@ -110,10 +111,10 @@ class PlottingWidget(QWidget):
         self.plot_type_combo.setStyleSheet(style)
 
         # Set size policy to expand horizontally
-        self.x_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.y_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.color_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.plot_type_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.x_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.y_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.color_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.plot_type_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         combo_layout = QHBoxLayout()
         combo_layout.addWidget(QLabel("Plot Type:"))
@@ -124,14 +125,14 @@ class PlottingWidget(QWidget):
         combo_layout.addWidget(self.y_combo)
         combo_layout.addWidget(QLabel("Color:"))
         combo_layout.addWidget(self.color_combo)
-        combo_layout.setAlignment(Qt.AlignTop)
+        combo_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         combo_layout.setSpacing(10)
         self._layout.addLayout(combo_layout)
 
         # Create QChart and QChartView
         self.chart = QChart()
         self.chart_view = QChartView(self.chart)
-        self.chart_view.setRenderHint(QPainter.Antialiasing)
+        self.chart_view.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.chart_view.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
@@ -217,8 +218,8 @@ class PlottingWidget(QWidget):
 
         self.chart.setTitle(f"{plot_type.name.capitalize().replace('_', ' ')}: {y_col}")
         self.chart.createDefaultAxes()
-        x_axis = self.chart.axes(QtCore.Horizontal)[0]
-        y_axis = self.chart.axes(QtCore.Vertical)[0]
+        x_axis = self.chart.axes(Qt.Orientation.Horizontal)[0]
+        y_axis = self.chart.axes(Qt.Orientation.Vertical)[0]
 
         self._set_axis_labels(
             x_axis,
