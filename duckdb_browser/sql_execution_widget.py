@@ -238,10 +238,16 @@ class SQLExecutionWidget(QWidget):
 
     def update_completions(self) -> None:
         table_names = self.connection.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'"
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
         ).fetchall()
         table_names = [name[0] for name in table_names]
-        self.text_edit.completer.update_completions(table_names)
+        keywords = [
+            "SELECT", "FROM", "WHERE", "GROUP BY", "HAVING", "ORDER BY",
+            "INSERT INTO", "UPDATE", "DELETE", "CREATE TABLE", "ALTER TABLE",
+            "DROP TABLE", "JOIN", "INNER JOIN", "LEFT JOIN", "RIGHT JOIN"
+        ]
+        completions = keywords + table_names
+        self.text_edit.completer.update_completions(completions)
 
     def execute_sql(self, query: str) -> None:
         try:
