@@ -60,12 +60,14 @@ class DuckDBTableModel(QAbstractTableModel):
 
     def set_filter(self, column: int, filter_text: str) -> None:
         # Existing implementation
-
-    def clear_all_filters(self) -> None:
-        for column in range(self.columnCount()):
-            self.set_filter(column, '')
         self.layoutAboutToBeChanged.emit()
         self._filters[column] = filter_text.lower()
+        self._apply_filters()
+        self.layoutChanged.emit()
+
+    def clear_all_filters(self) -> None:
+        self.layoutAboutToBeChanged.emit()
+        self._filters = [""] * len(self.headers)
         self._apply_filters()
         self.layoutChanged.emit()
 
