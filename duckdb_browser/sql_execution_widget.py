@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QCompleter,
 )
 from utils_get_schema import get_complete_schema
-from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtGui import QKeySequence, QShortcut, QTextDocument
 from PySide6.QtCore import Qt, QStringListModel
 from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtGui import (
@@ -66,7 +66,7 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
         current_position = 0
         for token, value in lex(text, self.lexer):
             token_str = str(token)
-            style_key = token_str.split('.')[-1]
+            style_key = token_str.split(".")[-1]
             if style_key in self.styles:
                 start = block_start + current_position
                 length = len(value)
@@ -122,7 +122,7 @@ class SQLTextEdit(QTextEdit):
         self.completer.setWidget(self)
         self.completer.activated.connect(self.insert_completion)
 
-    def setDocument(self, document):
+    def setDocument(self, document: QTextDocument) -> None:
         super().setDocument(document)
         self.highlighter.setDocument(document)
 
@@ -246,11 +246,26 @@ class SQLExecutionWidget(QWidget):
     def update_completions(self) -> None:
         schema = get_complete_schema(self.connection)
         table_names = list(schema.keys())
-        column_names = [col['name'] for table in schema.values() for col in table['columns']]
+        column_names = [
+            col["name"] for table in schema.values() for col in table["columns"]
+        ]
         keywords = [
-            "SELECT", "FROM", "WHERE", "GROUP BY", "HAVING", "ORDER BY",
-            "INSERT INTO", "UPDATE", "DELETE", "CREATE TABLE", "ALTER TABLE",
-            "DROP TABLE", "JOIN", "INNER JOIN", "LEFT JOIN", "RIGHT JOIN"
+            "SELECT",
+            "FROM",
+            "WHERE",
+            "GROUP BY",
+            "HAVING",
+            "ORDER BY",
+            "INSERT INTO",
+            "UPDATE",
+            "DELETE",
+            "CREATE TABLE",
+            "ALTER TABLE",
+            "DROP TABLE",
+            "JOIN",
+            "INNER JOIN",
+            "LEFT JOIN",
+            "RIGHT JOIN",
         ]
         completions = keywords + table_names + column_names
         self.text_edit.completer.update_completions(completions)
