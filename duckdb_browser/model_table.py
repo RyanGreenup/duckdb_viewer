@@ -1,12 +1,11 @@
-from typing import List, Union
+from typing import List, Union, Optional, Any, Tuple
 from PySide6.QtCore import (
     QPersistentModelIndex,
     Qt,
     QAbstractTableModel,
     QModelIndex,
 )
-from typing import Any, Tuple
-from duckdb import DuckDBPyConnection
+from duckdb import DuckDBPyConnection, DuckDBPyResult
 import pandas as pd
 
 # Custom type for our data
@@ -14,14 +13,14 @@ DataType = List[List[Any]]
 
 
 class DuckDBTableModel(QAbstractTableModel):
-    def __init__(self, connection: DuckDBPyConnection, table_name: str, result=None):
+    def __init__(self, connection: DuckDBPyConnection, table_name: str, result: Optional[DuckDBPyResult] = None):
         super().__init__()
-        self.connection = connection
-        self.table_name = table_name
+        self.connection: DuckDBPyConnection = connection
+        self.table_name: str = table_name
         self._data: DataType = []
         self.headers: List[Tuple[str, str]] = []  # (column_name, column_type)
-        self._sort_column = 0
-        self._sort_order = Qt.SortOrder.AscendingOrder
+        self._sort_column: int = 0
+        self._sort_order: Qt.SortOrder = Qt.SortOrder.AscendingOrder
         self._filters: List[str] = []
         self._filtered_data: DataType = []
 
@@ -43,7 +42,7 @@ class DuckDBTableModel(QAbstractTableModel):
         self._filtered_data = self._data
         self._filters = [""] * len(self.headers)
 
-    def _fetch_data_from_result(self, result) -> None:
+    def _fetch_data_from_result(self, result: DuckDBPyResult) -> None:
         # Fetch column names and types
         self.headers = [(col[0], str(col[1])) for col in result.description]
 
