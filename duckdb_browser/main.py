@@ -136,17 +136,19 @@ class TableListModel(QAbstractItemModel):
         return QModelIndex()
 
     @overload
-    def parent(self) -> QObject:
-        ...
+    def parent(self) -> QObject: ...
 
     @overload
-    def parent(self, child: Union[QModelIndex, QPersistentModelIndex]) -> QModelIndex:
-        ...
+    def parent(
+        self, child: Union[QModelIndex, QPersistentModelIndex]
+    ) -> QModelIndex: ...
 
-    def parent(self, child: Union[QModelIndex, QPersistentModelIndex, None] = None) -> Union[QObject, QModelIndex]:
+    def parent(
+        self, child: Union[QModelIndex, QPersistentModelIndex, None] = None
+    ) -> Union[QObject, QModelIndex]:
         if child is None:
             return super().parent()
-        
+
         if not child.isValid():
             return QModelIndex()
 
