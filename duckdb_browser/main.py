@@ -104,7 +104,8 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
     """)
 
     # Check if the table is empty and insert initial data if needed
-    if con.execute("SELECT COUNT(*) FROM test").fetchone()[0] == 0:
+    result = con.execute("SELECT COUNT(*) FROM test").fetchone()
+    if result is not None and result[0] == 0:
         con.execute("INSERT INTO test VALUES (1, 'John'), (2, 'Jane')")
 
     return con
