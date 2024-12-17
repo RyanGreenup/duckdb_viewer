@@ -129,7 +129,7 @@ class TableListModel(QAbstractItemModel):
             return self.createIndex(row, column, child_item)
         return QModelIndex()
 
-    def parent(self, index: Union[QModelIndex, QPersistentModelIndex]) -> QModelIndex:
+    def parent(self, index: Union[QModelIndex, QPersistentModelIndex]) -> QModelIndex:  # type:ignore [fn_QModelIndex.parent]
         if not index.isValid():
             return QModelIndex()
 
@@ -443,3 +443,11 @@ def main(db_path: str = "duckdb_browser.db", table_name: Optional[str] = None) -
 
 if __name__ == "__main__":
     typer.run(main)
+
+
+
+# Footnotes
+# [fn_QModelIndex.parent]
+# This matches the documentation
+# An issue with pyright probably
+# https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.parent
