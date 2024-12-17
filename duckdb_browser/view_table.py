@@ -242,6 +242,7 @@ class TableWidget(QWidget):
         self.table_view.setModel(error_model)
         self.setup_header_widgets(error_model)
 
+
 # Footnotes
 # [fn_rect]: This is valid, it's a but in PySide6 linting, see
 #            <https://forum.qt.io/topic/159840/qstyleoptionviewitem-rect/9>
