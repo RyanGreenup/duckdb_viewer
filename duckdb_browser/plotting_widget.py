@@ -256,7 +256,7 @@ class PlottingWidget(QWidget):
     ) -> NumericOrCategoricalResult:
         if data.dtype == "object":
             categories = data.unique().tolist()
-            return pd.Series(pd.Categorical(data).codes), categories
+            return pd.Series(pd.Categorical(data).codes), categories  # type: ignore
         else:
             return pd.to_numeric(data, errors="coerce"), None
 
@@ -269,7 +269,7 @@ class PlottingWidget(QWidget):
                 series.setName(f"{color_col}: {color}")
                 series.setColor(color_map[color])
                 color_data = valid_data[valid_data["color"] == color]
-                for y, x, y_plot, x_plot in zip(
+                for _y, _x, y_plot, x_plot in zip(
                     color_data["y"],
                     color_data["x"],
                     color_data["y_plot"],
@@ -281,7 +281,7 @@ class PlottingWidget(QWidget):
         else:
             series = QScatterSeries()
             series.setName("Data")
-            for y, x, y_plot, x_plot in zip(
+            for _y, _x, y_plot, x_plot in zip(
                 valid_data["y"],
                 valid_data["x"],
                 valid_data["y_plot"],
