@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
     filter_inputs: List[QLineEdit]
     table_model: DuckDBTableModel
     status_bar: QStatusBar
-    schema_dialog: Optional['SchemaDialog']
+    schema_dialog: Optional["SchemaDialog"]
 
     def __init__(
         self,
@@ -307,18 +307,19 @@ class MainWindow(QMainWindow):
         )
 
     def show_schema_dialog(self) -> None:
-        if not hasattr(self, 'schema_dialog') or self.schema_dialog is None:
+        if not hasattr(self, "schema_dialog") or self.schema_dialog is None:
             self.schema_dialog = SchemaDialog(self, self.con)
         self.schema_dialog.show_schema()
 
     def show_sql_schema_dialog(self) -> None:
-        if not hasattr(self, 'schema_dialog') or self.schema_dialog is None:
+        if not hasattr(self, "schema_dialog") or self.schema_dialog is None:
             self.schema_dialog = SchemaDialog(self, self.con)
         self.schema_dialog.show_sql_schema()
 
 
 class SchemaDialog(QDialog):
     con: DuckDBPyConnection
+
     def __init__(
         self, parent: Optional[QWidget] = None, con: DuckDBPyConnection = None
     ):
@@ -349,7 +350,9 @@ class SchemaDialog(QDialog):
         schema_str = json.dumps(schema, indent=2)
 
         self.setWindowTitle("Database Schema")
-        self.text_edit.setPlainText(f"Here's the complete schema of the database:\n\n{schema_str}")
+        self.text_edit.setPlainText(
+            f"Here's the complete schema of the database:\n\n{schema_str}"
+        )
         self.exec()
 
     def show_sql_schema(self) -> None:
@@ -365,7 +368,9 @@ class SchemaDialog(QDialog):
         create_statements = generate_create_table_statements(schema)
 
         self.setWindowTitle("SQL Schema")
-        self.text_edit.setPlainText(f"Here are the CREATE TABLE statements for the database:\n\n{'\n\n'.join(create_statements)}")
+        self.text_edit.setPlainText(
+            f"Here are the CREATE TABLE statements for the database:\n\n{'\n\n'.join(create_statements)}"
+        )
         self.exec()
 
 
