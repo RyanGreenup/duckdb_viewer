@@ -22,7 +22,7 @@ from PySide6.QtCharts import (
 from PySide6.QtGui import QPainter, QColor
 import pandas as pd
 import numpy as np
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 from enum import Enum, auto
 
 
@@ -259,7 +259,7 @@ class PlottingWidget(QWidget):
                     color_data["y_plot"],
                     color_data["x_plot"],
                 ):
-                    point = series.append(float(x_plot), float(y_plot))
+                    series.append(float(x_plot), float(y_plot))
                 series.hovered.connect(self._show_tooltip)
                 self.chart.addSeries(series)
         else:
@@ -271,7 +271,7 @@ class PlottingWidget(QWidget):
                 valid_data["y_plot"],
                 valid_data["x_plot"],
             ):
-                point = series.append(float(x_plot), float(y_plot))
+                series.append(float(x_plot), float(y_plot))
             series.hovered.connect(self._show_tooltip)
             self.chart.addSeries(series)
 
@@ -285,14 +285,14 @@ class PlottingWidget(QWidget):
                 series.setColor(color_map[color])
                 color_data = valid_data[valid_data["color"] == color]
                 for y_plot, x_plot in zip(color_data["y_plot"], color_data["x_plot"]):
-                    point = series.append(float(x_plot), float(y_plot))
+                    series.append(float(x_plot), float(y_plot))
                 series.hovered.connect(self._show_tooltip)
                 self.chart.addSeries(series)
         else:
             series = QLineSeries()
             series.setName("Data")
             for y_plot, x_plot in zip(valid_data["y_plot"], valid_data["x_plot"]):
-                point = series.append(float(x_plot), float(y_plot))
+                series.append(float(x_plot), float(y_plot))
             series.hovered.connect(self._show_tooltip)
             self.chart.addSeries(series)
 
@@ -369,7 +369,9 @@ class PlottingWidget(QWidget):
         upper_bound = q3 + 1.5 * iqr
         return QBoxSet(lower_bound, q1, median, q3, upper_bound)
 
-    def _get_color_map(self, unique_colors):
+    ColorMap = Dict[str, QColor]
+
+    def _get_color_map(self, unique_colors: List[str]) -> ColorMap:
         return {
             color: QColor(
                 hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256
