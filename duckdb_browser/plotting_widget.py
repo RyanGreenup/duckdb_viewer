@@ -305,6 +305,9 @@ class PlottingWidget(QWidget):
             if y_categories:
                 self._set_categories(y_axis, y_categories)
 
+        # Rotate x-axis labels by 45 degrees
+        x_axis.setLabelsAngle(-45)
+
     def _set_categories(self, axis, categories):
         if isinstance(axis, QValueAxis):
             new_axis = QBarCategoryAxis()
