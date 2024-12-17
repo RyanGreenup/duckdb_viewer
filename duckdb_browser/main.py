@@ -83,7 +83,7 @@ class DuckDBTableModel(QAbstractTableModel):
             return True
         return False
 
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+    def flags(self, index: Union[QModelIndex, QPersistentModelIndex]) -> Qt.ItemFlags:
         return (
             Qt.ItemFlag.ItemIsEnabled
             | Qt.ItemFlag.ItemIsSelectable
