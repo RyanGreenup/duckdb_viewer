@@ -77,12 +77,21 @@ class DuckDBTableModel(QAbstractTableModel):
         self._data: DataType = []
         self.headers: List[str] = []
         self._fetch_data()
+        self._sort_column = 0
+        self._sort_order = Qt.SortOrder.AscendingOrder
 
     def _fetch_data(self) -> None:
         query = f"SELECT * FROM {self.table_name}"
         df: pd.DataFrame = self.connection.execute(query).df()
         self._data = df.values.tolist()
         self.headers = df.columns.tolist()
+
+    def sort(self, column: int, order: Qt.SortOrder) -> None:
+        self.layoutAboutToBeChanged.emit()
+        self._sort_column = column
+        self._sort_order = order
+        self._data.sort(key=lambda x: x[column], reverse=(order == Qt.SortOrder.DescendingOrder))
+        self.layoutChanged.emit()
 
     def rowCount(
         self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
@@ -195,6 +204,7 @@ class MainWindow(QMainWindow):
         self.table_view = QTableView()
         self.table_model = DuckDBTableModel(self.con, "test")  # Default to "test" table
         self.table_view.setModel(self.table_model)
+        self.table_view.setSortingEnabled(True)
 
         # Add views to splitter
         splitter.addWidget(self.sidebar)
