@@ -193,6 +193,11 @@ class PlottingWidget(QWidget):
 
         self._set_axis_labels(x_axis, y_axis, plot_type, x_col, y_col, valid_data, color_col, x_categories, y_categories)
 
+        if color_col:
+            self.chart.legend().show()
+        else:
+            self.chart.legend().hide()
+
         self.chart_view.update()
 
     def _convert_to_numeric_or_categorical(self, data: pd.Series) -> Tuple[pd.Series, Optional[List[str]]]:
@@ -208,7 +213,7 @@ class PlottingWidget(QWidget):
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
                 series = QScatterSeries()
-                series.setName(str(color))
+                series.setName(f"{color_col}: {color}")
                 series.setColor(color_map[color])
                 color_data = valid_data[valid_data['color'] == color]
                 for y, x, y_plot, x_plot in zip(color_data['y'], color_data['x'], color_data['y_plot'], color_data['x_plot']):
@@ -217,6 +222,7 @@ class PlottingWidget(QWidget):
                 self.chart.addSeries(series)
         else:
             series = QScatterSeries()
+            series.setName("Data")
             for y, x, y_plot, x_plot in zip(valid_data['y'], valid_data['x'], valid_data['y_plot'], valid_data['x_plot']):
                 point = series.append(float(x_plot), float(y_plot))
             series.hovered.connect(self._show_tooltip)
@@ -228,7 +234,7 @@ class PlottingWidget(QWidget):
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
                 series = QLineSeries()
-                series.setName(str(color))
+                series.setName(f"{color_col}: {color}")
                 series.setColor(color_map[color])
                 color_data = valid_data[valid_data['color'] == color]
                 for y_plot, x_plot in zip(color_data['y_plot'], color_data['x_plot']):
@@ -237,6 +243,7 @@ class PlottingWidget(QWidget):
                 self.chart.addSeries(series)
         else:
             series = QLineSeries()
+            series.setName("Data")
             for y_plot, x_plot in zip(valid_data['y_plot'], valid_data['x_plot']):
                 point = series.append(float(x_plot), float(y_plot))
             series.hovered.connect(self._show_tooltip)
