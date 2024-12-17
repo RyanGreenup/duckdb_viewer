@@ -167,10 +167,10 @@ class MainWindow(QMainWindow):
         for col in range(self.table_model.columnCount()):
             column_name, column_type = self.table_model.headers[col]
             placeholder = f"Filter {column_name}"
-            
+
             line_edit1 = self.table_widget.add_filter_input(col, placeholder)
             line_edit2 = self.tab2_table_widget.add_filter_input(col, placeholder)
-            
+
             if line_edit1:
                 line_edit1.textChanged.connect(
                     lambda text, column=col: self.apply_filter(text, column)
