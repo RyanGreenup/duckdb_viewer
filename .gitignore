@@ -3,3 +3,6 @@
 .pyre_configuration
 foo.duckdb
 my_database.db
+.aider.input.history
+.aider.tags.cache.v3
+duckdb_browser.db

@@ -15,7 +15,6 @@ from PySide6.QtCore import (
     QAbstractTableModel,
     QModelIndex,
     QAbstractItemModel,
-    QObject,
 )
 import duckdb
 from duckdb import DuckDBPyConnection
@@ -66,7 +65,7 @@ class TableListModel(QAbstractItemModel):
             return self.createIndex(row, column)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex) -> QModelIndex:
+    def parent(self, child: QModelIndex) -> QModelIndex:  # type: ignore # Documentation confirms this is correct
         return QModelIndex()
 
 
@@ -210,7 +209,7 @@ class MainWindow(QMainWindow):
         # Set central widget
         self.setCentralWidget(main_widget)
 
-    def on_sidebar_clicked(self, index: QModelIndex):
+    def on_sidebar_clicked(self, index: QModelIndex) -> None:
         table_name = self.sidebar_model.data(index, Qt.ItemDataRole.DisplayRole)
         self.table_model = DuckDBTableModel(self.con, table_name)
         self.table_view.setModel(self.table_model)
