@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QPalette, QFont
+from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QPalette
 from PySide6.QtGui import QFontWeight
 from enum import Enum
 from view_table import TableWidget
@@ -23,6 +23,7 @@ class FontStyle(Enum):
     BOLD = 2
     ITALIC = 3
 
+
 class SQLSyntaxHighlighter(QSyntaxHighlighter):
     def __init__(self, parent: QTextEdit) -> None:
         super().__init__(parent)
@@ -31,15 +32,21 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
 
     def generate_styles(self) -> dict[Token, QTextCharFormat]:
         styles: dict[Token, QTextCharFormat] = {}
-        styles[Token.Keyword] = self.format_for_token(Token.Keyword, "#007020", FontStyle.BOLD)
+        styles[Token.Keyword] = self.format_for_token(
+            Token.Keyword, "#007020", FontStyle.BOLD
+        )
         styles[Token.String] = self.format_for_token(Token.String, "#4070a0")
         styles[Token.Number] = self.format_for_token(Token.Number, "#40a070")
         styles[Token.Operator] = self.format_for_token(Token.Operator, "#666666")
         styles[Token.Punctuation] = self.format_for_token(Token.Punctuation, "#666666")
-        styles[Token.Comment] = self.format_for_token(Token.Comment, "#60a0b0", FontStyle.ITALIC)
+        styles[Token.Comment] = self.format_for_token(
+            Token.Comment, "#60a0b0", FontStyle.ITALIC
+        )
         return styles
 
-    def format_for_token(self, token: Token, color: str, font_style: FontStyle = FontStyle.NORMAL) -> QTextCharFormat:
+    def format_for_token(
+        self, token: Token, color: str, font_style: FontStyle = FontStyle.NORMAL
+    ) -> QTextCharFormat:
         text_format = QTextCharFormat()
         text_format.setForeground(QColor(color))
         if font_style == FontStyle.BOLD:
