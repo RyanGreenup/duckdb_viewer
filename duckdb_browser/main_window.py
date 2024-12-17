@@ -15,6 +15,8 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QTextEdit,
     QGridLayout,
+    QDialog,
+    QPushButton,
 )
 from typing import List, Optional, Callable
 from PySide6.QtCore import Qt, QModelIndex, Signal
@@ -304,6 +306,23 @@ class MainWindow(QMainWindow):
             "DuckDB Browser is a simple GUI for browsing DuckDB databases.",
         )
 
+class SchemaDialog(QDialog):
+    def __init__(self, parent: Optional[QWidget] = None, title: str = "", content: str = ""):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setMinimumSize(600, 400)
+
+        layout = QVBoxLayout(self)
+
+        text_edit = QTextEdit(self)
+        text_edit.setPlainText(content)
+        text_edit.setReadOnly(True)
+        layout.addWidget(text_edit)
+
+        ok_button = QPushButton("OK", self)
+        ok_button.clicked.connect(self.accept)
+        layout.addWidget(ok_button)
+
     def show_schema(self) -> None:
         if not self.con:
             QMessageBox.warning(
@@ -316,19 +335,11 @@ class MainWindow(QMainWindow):
         schema = get_complete_schema(self.con)
         schema_str = json.dumps(schema, indent=2)
 
-        schema_dialog = QMessageBox(self)
-        schema_dialog.setWindowTitle("Database Schema")
-        schema_dialog.setText("Here's the complete schema of the database:")
-
-        text_edit = QTextEdit()
-        text_edit.setPlainText(schema_str)
-        text_edit.setReadOnly(True)
-
-        layout = schema_dialog.layout()
-        if isinstance(layout, QGridLayout):
-            layout.addWidget(text_edit, 1, 0, 1, layout.columnCount())
-        schema_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
-
+        schema_dialog = SchemaDialog(
+            self,
+            "Database Schema",
+            f"Here's the complete schema of the database:\n\n{schema_str}"
+        )
         schema_dialog.exec()
 
     def show_sql_schema(self) -> None:
@@ -343,19 +354,11 @@ class MainWindow(QMainWindow):
         schema = get_complete_schema(self.con)
         create_statements = generate_create_table_statements(schema)
 
-        schema_dialog = QMessageBox(self)
-        schema_dialog.setWindowTitle("SQL Schema")
-        schema_dialog.setText("Here are the CREATE TABLE statements for the database:")
-
-        text_edit = QTextEdit()
-        text_edit.setPlainText("\n\n".join(create_statements))
-        text_edit.setReadOnly(True)
-
-        layout = schema_dialog.layout()
-        if isinstance(layout, QGridLayout):
-            layout.addWidget(text_edit, 1, 0, 1, layout.columnCount())
-        schema_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
-
+        schema_dialog = SchemaDialog(
+            self,
+            "SQL Schema",
+            f"Here are the CREATE TABLE statements for the database:\n\n{'\n\n'.join(create_statements)}"
+        )
         schema_dialog.exec()
 
 
