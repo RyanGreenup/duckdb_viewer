@@ -12,9 +12,10 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import seaborn as sns
 import pandas as pd
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, cast
 from matplotlib.axes import Axes
 
+PlotType = Literal["Scatter", "Line", "Bar"]
 
 class PlottingWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
@@ -57,7 +58,7 @@ class PlottingWidget(QWidget):
         self.plot_type_combo.setStyleSheet(style)
 
         # Set size policy to expand horizontally
-        size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        size_policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.x_combo.setSizePolicy(size_policy)
         self.y_combo.setSizePolicy(size_policy)
         self.plot_type_combo.setSizePolicy(size_policy)
@@ -115,9 +116,7 @@ class PlottingWidget(QWidget):
         self.figure.clear()
         ax: Axes = self.figure.add_subplot(111)
 
-        plot_type: Literal["Scatter", "Line", "Bar"] = (
-            self.plot_type_combo.currentText()
-        )
+        plot_type: PlotType = cast(PlotType, self.plot_type_combo.currentText())
 
         if plot_type == "Scatter":
             sns.scatterplot(data=self.data, x=x_col, y=y_col, ax=ax)
