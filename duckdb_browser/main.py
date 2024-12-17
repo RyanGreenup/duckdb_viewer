@@ -22,7 +22,7 @@ from PySide6.QtCore import (
 )
 import duckdb
 from duckdb import DuckDBPyConnection
-from typing import Optional, Any, List, Union
+from typing import Any, Union
 import typer
 import pandas as pd
 
@@ -228,6 +228,7 @@ class TableWidget(QWidget):
         self.filter_layout.addWidget(line_edit)
         return line_edit
 
+
 class MainWindow(QMainWindow):
     def __init__(
         self,
@@ -318,7 +319,9 @@ class MainWindow(QMainWindow):
 
         # Create new filter inputs
         for col in range(self.table_model.columnCount()):
-            placeholder = f"Filter {self.table_model.headerData(col, Qt.Orientation.Horizontal)}"
+            placeholder = (
+                f"Filter {self.table_model.headerData(col, Qt.Orientation.Horizontal)}"
+            )
             line_edit = self.table_widget.add_filter(placeholder)
             line_edit.textChanged.connect(
                 lambda text, column=col: self.apply_filter(text, column)
