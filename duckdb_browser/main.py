@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QTableView
-from PySide6.QtCore import QPersistentModelIndex, Qt, QAbstractTableModel, QModelIndex
+from PySide6.QtWidgets import QApplication, QMainWindow, QTableView, QTreeView, QSplitter, QVBoxLayout, QWidget
+from PySide6.QtCore import QPersistentModelIndex, Qt, QAbstractTableModel, QModelIndex, QAbstractItemModel
 import duckdb
 from duckdb import DuckDBPyConnection
 from typing import Optional, Any, List, Union
@@ -11,6 +11,34 @@ import pandas as pd
 # Custom type for our data
 DataType = List[List[Any]]
 
+class TableListModel(QAbstractItemModel):
+    def __init__(self, connection: DuckDBPyConnection):
+        super().__init__()
+        self.connection = connection
+        self.tables = self._fetch_tables()
+
+    def _fetch_tables(self) -> List[str]:
+        query = "SELECT name FROM sqlite_master WHERE type='table'"
+        return [row[0] for row in self.connection.execute(query).fetchall()]
+
+    def rowCount(self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()) -> int:
+        return len(self.tables) if not parent.isValid() else 0
+
+    def columnCount(self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()) -> int:
+        return 1
+
+    def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            return self.tables[index.row()]
+        return None
+
+    def index(self, row: int, column: int, parent: QModelIndex = QModelIndex()) -> QModelIndex:
+        if self.hasIndex(row, column, parent):
+            return self.createIndex(row, column)
+        return QModelIndex()
+
+    def parent(self, index: QModelIndex) -> QModelIndex:
+        return QModelIndex()
 
 class DuckDBTableModel(QAbstractTableModel):
     def __init__(self, connection: DuckDBPyConnection, table_name: str):
@@ -112,29 +140,54 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
 
 
 class MainWindow(QMainWindow):
-    def __init__(
-        self, db_path: str = ":memory:", parent: Optional[QMainWindow] = None
-    ) -> None:
+    def __init__(self, db_path: str = ":memory:", parent: Optional[QMainWindow] = None) -> None:
         super().__init__(parent)
 
         # Connect to DuckDB
         self.con = create_connection(db_path=db_path)
 
-        # Create and set the model
-        self.model = DuckDBTableModel(self.con, "test")
+        # Create main widget and layout
+        main_widget = QWidget()
+        main_layout = QVBoxLayout(main_widget)
 
-        # Create a QTableView and set the model
-        self.view = QTableView(self)
-        self.view.setModel(self.model)
-        self.setCentralWidget(self.view)
+        # Create splitter
+        splitter = QSplitter(Qt.Horizontal)
 
+        # Create and set up the sidebar tree view
+        self.sidebar = QTreeView()
+        self.sidebar_model = TableListModel(self.con)
+        self.sidebar.setModel(self.sidebar_model)
+        self.sidebar.setHeaderHidden(True)
+        self.sidebar.clicked.connect(self.on_sidebar_clicked)
+
+        # Create and set up the table view
+        self.table_view = QTableView()
+        self.table_model = DuckDBTableModel(self.con, "test")  # Default to "test" table
+        self.table_view.setModel(self.table_model)
+
+        # Add views to splitter
+        splitter.addWidget(self.sidebar)
+        splitter.addWidget(self.table_view)
+
+        # Set splitter sizes
+        splitter.setSizes([200, 600])  # Adjust these values as needed
+
+        # Add splitter to main layout
+        main_layout.addWidget(splitter)
+
+        # Set central widget
+        self.setCentralWidget(main_widget)
+
+    def on_sidebar_clicked(self, index: QModelIndex):
+        table_name = self.sidebar_model.data(index, Qt.ItemDataRole.DisplayRole)
+        self.table_model = DuckDBTableModel(self.con, table_name)
+        self.table_view.setModel(self.table_model)
 
 def main(db_path: str = "duckdb_browser.db") -> None:
     app = QApplication(sys.argv)
     window = MainWindow(db_path=db_path)
     window.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     typer.run(main)
