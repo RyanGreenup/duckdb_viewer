@@ -37,7 +37,7 @@ class DuckDBTableModel(QAbstractTableModel):
     ) -> int:
         return len(self.headers)
 
-    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+    def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
             return str(self._data[index.row()][index.column()])
         return None
