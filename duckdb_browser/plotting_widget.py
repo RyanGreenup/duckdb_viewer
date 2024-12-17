@@ -261,7 +261,7 @@ class PlottingWidget(QWidget):
     ) -> Tuple[pd.Series[Union[int, float]], Optional[List[str]]]:
         if data.dtype == "object":
             categories = data.unique().tolist()
-            return pd.Series(pd.Categorical(data).codes, dtype=int), categories
+            return pd.Series(pd.Categorical(data).codes, dtype=int), categories  # type: ignore
         else:
             return pd.to_numeric(data, errors="coerce"), None
 
