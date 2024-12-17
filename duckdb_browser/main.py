@@ -60,7 +60,7 @@ class DuckDBTableModel(QAbstractTableModel):
         return None
 
     def setData(
-        self, index: QModelIndex, value: Any, role: int = Qt.ItemDataRole.EditRole
+        self, index: Union[QModelIndex, QPersistentModelIndex], value: Any, role: int = Qt.ItemDataRole.EditRole
     ) -> bool:
         if role == Qt.ItemDataRole.EditRole:
             row = index.row()
