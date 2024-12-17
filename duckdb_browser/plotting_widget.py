@@ -203,26 +203,20 @@ class PlottingWidget(QWidget):
         y_data, y_categories = self._convert_to_numeric_or_categorical(self.data[y_col])
 
         # Create valid_data DataFrame with original data
-        valid_data = pd.DataFrame(
-            {
-                "x": self.data[x_col],
-                "y": self.data[y_col],
-                "x_plot": x_data,
-                "y_plot": y_data,
-            }
-        )
-        if color_col != "None":
-            valid_data["color"] = self.data[color_col]
-        valid_data = valid_data.dropna()
-
+        valid_data = pd.DataFrame({
+            "x": self.data[x_col],
+            "y": self.data[y_col],
+            "x_plot": x_data,
+            "y_plot": y_data,
+        })
+        
         # Handle empty color column
         color_col_opt: Optional[str] = None
-        if (
-            color_col != "None"
-            and color_col in valid_data.columns
-            and not valid_data["color"].empty
-        ):
-            color_col_opt = str(color_col)
+        if color_col != "None":
+            valid_data[color_col] = self.data[color_col]
+            color_col_opt = color_col
+
+        valid_data = valid_data.dropna()
 
         match plot_type:
             case PlotType.SCATTER:
@@ -345,21 +339,17 @@ class PlottingWidget(QWidget):
             series.append(bar_set)
         self.chart.addSeries(series)
 
-    def _plot_histogram(
-        self, valid_data: pd.DataFrame, color_col: Optional[str]
-    ) -> None:
+    def _plot_histogram(self, valid_data: pd.DataFrame, color_col: Optional[str]) -> None:
         series = QBarSeries()
-        if color_col != "None":
-            unique_colors = valid_data["color"].unique()
+        if color_col and color_col != "None":
+            unique_colors = valid_data[color_col].unique()
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
                 bar_set = QBarSet(str(color))
                 bar_set.setColor(color_map[color])
-                color_data = valid_data[valid_data["color"] == color]
+                color_data = valid_data[valid_data[color_col] == color]
                 hist, bin_edges = np.histogram(color_data["y_plot"], bins="auto")
-                for count, bin_start, bin_end in zip(
-                    hist, bin_edges[:-1], bin_edges[1:]
-                ):
+                for count, bin_start, bin_end in zip(hist, bin_edges[:-1], bin_edges[1:]):
                     bar_set.append(float(count))
                     bar_set.setLabel(f"{bin_start:.2f}-{bin_end:.2f}")
                 series.append(bar_set)
