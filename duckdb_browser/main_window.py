@@ -11,9 +11,10 @@ from PySide6.QtWidgets import (
     QStatusBar,
     QMenu,
     QMessageBox,
+    QFileDialog,
 )
-from typing import List, Optional
-from PySide6.QtCore import Qt, QModelIndex
+from typing import List, Optional, Callable
+from PySide6.QtCore import Qt, QModelIndex, Signal
 import duckdb
 from duckdb import DuckDBPyConnection
 from view_table import TableWidget
@@ -23,6 +24,8 @@ from sql_execution_widget import SQLExecutionWidget
 
 
 class MainWindow(QMainWindow):
+    database_changed = Signal(str)
+
     con: DuckDBPyConnection
     tab_widget: QTabWidget
     tab1: QWidget
@@ -40,8 +43,13 @@ class MainWindow(QMainWindow):
         db_path: str = ":memory:",
         initial_table: Optional[str] = None,
         parent: Optional[QMainWindow] = None,
+        on_database_changed: Optional[Callable[[str], None]] = None,
     ) -> None:
         super().__init__(parent)
+
+        self.db_path = db_path
+        if on_database_changed:
+            self.database_changed.connect(on_database_changed)
 
         # Create menu bar
         self.create_menu_bar()
@@ -51,7 +59,7 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status_bar)
 
         # Connect to DuckDB
-        self.con = create_connection(db_path=db_path)
+        self.con = create_connection(db_path=self.db_path)
 
         # Create main widget and layout
         main_widget = QWidget()
@@ -230,8 +238,27 @@ class MainWindow(QMainWindow):
         menu_bar.addMenu(file_menu)
 
         # Add actions to File menu
+        open_db_action = file_menu.addAction("&Open Database")
+        open_db_action.triggered.connect(self.open_database)
+
         exit_action = file_menu.addAction("E&xit")
         exit_action.triggered.connect(self.close)
+
+    def open_database(self) -> None:
+        file_dialog = QFileDialog(self)
+        file_dialog.setNameFilter("DuckDB files (*.db);;All files (*)")
+        if file_dialog.exec():
+            selected_files = file_dialog.selectedFiles()
+            if selected_files:
+                new_db_path = selected_files[0]
+                self.db_path = new_db_path
+                self.con.close()
+                self.con = create_connection(db_path=self.db_path)
+                self.sidebar_model = TableListModel(self.con)
+                self.sidebar.setModel(self.sidebar_model)
+                self.load_first_table()
+                self.status_bar.showMessage(f"Opened database: {self.db_path}")
+                self.database_changed.emit(self.db_path)
 
         # Edit menu
         edit_menu = QMenu("&Edit", self)
