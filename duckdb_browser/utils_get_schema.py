@@ -1,10 +1,11 @@
 import duckdb
 from typing import Dict, Any, List
 
+
 def get_complete_schema(con: duckdb.DuckDBPyConnection) -> Dict[str, Any]:
     try:
         schema = {}
-        
+
         # Get all tables with their columns and primary key information
         tables_info = con.execute("""
             SELECT 
@@ -29,48 +30,47 @@ def get_complete_schema(con: duckdb.DuckDBPyConnection) -> Dict[str, Any]:
             ORDER BY 
                 t.table_name, c.ordinal_position
         """).fetchall()
-        
+
         for row in tables_info:
             table_name, column_name, data_type, is_nullable, is_primary_key = row
-            
+
             if table_name not in schema:
                 schema[table_name] = {
-                    'columns': [],
-                    'primary_keys': [],
-                    'foreign_keys': []  # Still empty, as DuckDB doesn't provide easy access to this info
+                    "columns": [],
+                    "primary_keys": [],
+                    "foreign_keys": [],  # Still empty, as DuckDB doesn't provide easy access to this info
                 }
-            
-            schema[table_name]['columns'].append({
-                'name': column_name,
-                'type': data_type,
-                'notnull': is_nullable == 'NO'
-            })
-            
+
+            schema[table_name]["columns"].append(
+                {"name": column_name, "type": data_type, "notnull": is_nullable == "NO"}
+            )
+
             if is_primary_key:
-                schema[table_name]['primary_keys'].append(column_name)
-        
+                schema[table_name]["primary_keys"].append(column_name)
+
         return schema
-    
+
     except Exception as e:
         print(f"Error retrieving schema: {str(e)}")
         return {}
 
+
 def generate_create_table_statements(schema: Dict[str, Any]) -> List[str]:
     create_statements = []
-    
+
     for table_name, table_info in schema.items():
         columns = []
-        for column in table_info['columns']:
+        for column in table_info["columns"]:
             column_def = f"{column['name']} {column['type']}"
-            if column['notnull']:
+            if column["notnull"]:
                 column_def += " NOT NULL"
             columns.append(column_def)
-        
+
         primary_key = ""
-        if table_info['primary_keys']:
+        if table_info["primary_keys"]:
             primary_key = f", PRIMARY KEY ({', '.join(table_info['primary_keys'])})"
-        
+
         create_statement = f"CREATE TABLE {table_name} (\n    {',\n    '.join(columns)}{primary_key}\n);"
         create_statements.append(create_statement)
-    
+
     return create_statements
