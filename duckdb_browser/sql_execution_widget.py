@@ -7,10 +7,13 @@ from PySide6.QtWidgets import (
     QPushButton,
     QCompleter,
 )
+from PySide6.QtCore import Qt
 from utils_get_schema import get_complete_schema
 from PySide6.QtGui import QKeySequence, QShortcut, QTextDocument
 from PySide6.QtCore import Qt, QStringListModel
 from PySide6.QtCore import QAbstractItemModel
+from plotting_widget import PlottingWidget
+import pandas as pd
 from PySide6.QtGui import (
     QKeyEvent,
     QColor,
@@ -199,18 +202,14 @@ class SQLExecutionWidget(QWidget):
         self.table_widget: TableWidget
         self.text_edit: SQLTextEdit
         self.execute_button: QPushButton
+        self.plotting_widget: PlottingWidget
         self.create_content()
         self.update_completions()
         self.setup_shortcuts()
 
     def create_content(self) -> None:
-        # Create splitter
+        # Create vertical splitter
         splitter = QSplitter(Qt.Orientation.Vertical)
-
-        # Create and set up the table widget
-        self.table_widget = TableWidget()
-        self.table_widget.table_view.setSortingEnabled(True)
-        self.table_widget.filterChanged.connect(self.on_filter_changed)
 
         # Create and set up the SQLTextEdit
         self.text_edit = SQLTextEdit()
@@ -225,13 +224,21 @@ class SQLExecutionWidget(QWidget):
         input_layout.addWidget(self.text_edit)
         input_layout.addWidget(self.execute_button)
 
+        # Create and set up the table widget
+        self.table_widget = TableWidget()
+        self.table_widget.table_view.setSortingEnabled(True)
+        self.table_widget.filterChanged.connect(self.on_filter_changed)
+
+        # Create plotting widget
+        self.plotting_widget = PlottingWidget()
+
         # Add widgets to splitter
         splitter.addWidget(input_widget)
         splitter.addWidget(self.table_widget)
+        splitter.addWidget(self.plotting_widget)
 
         # Set splitter sizes
-        splitter.setSizes([200, 400])  # Adjust these values as needed
-        splitter.setHandleWidth(20)
+        splitter.setSizes([200, 400, 200])  # Adjust these values as needed
 
         # Add splitter to layout
         self.main_layout.addWidget(splitter)
@@ -283,7 +290,17 @@ class SQLExecutionWidget(QWidget):
             model = DuckDBTableModel(self.connection, "", result=result)
             self.table_widget.set_model(model)
             self.highlight_sql(success=True)
-            self.update_completions()  # Update completions after successful query execution
+            self.update_completions()
+
+            # Update plot with new data
+            if model.rowCount() > 0 and model.columnCount() >= 2:
+                data = {
+                    model.headerData(0, Qt.Orientation.Horizontal): [model.data(model.index(row, 0)) for row in range(model.rowCount())],
+                    model.headerData(1, Qt.Orientation.Horizontal): [model.data(model.index(row, 1)) for row in range(model.rowCount())]
+                }
+                df = pd.DataFrame(data)
+                self.plotting_widget.plot_data(df)
+
         except Exception as e:
             error_message = f"Error executing SQL: {str(e)}"
             self.table_widget.display_error(error_message)
