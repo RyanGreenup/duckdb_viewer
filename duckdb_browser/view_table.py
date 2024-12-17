@@ -97,7 +97,7 @@ class CustomHeaderWidget(QWidget):
         layout.setSpacing(2)
 
         # Add column name label
-        label = QLabel(column_name)
+        label = QLabel(str(column_name))  # Convert column_name to string
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         font = QFont()
         font.setBold(True)
