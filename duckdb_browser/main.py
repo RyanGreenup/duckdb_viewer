@@ -24,7 +24,9 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, db_path: str = ":memory:", parent: Optional[QMainWindow] = None) -> None:
+    def __init__(
+        self, db_path: str = ":memory:", parent: Optional[QMainWindow] = None
+    ) -> None:
         super().__init__(parent)
 
         # Connect to DuckDB
