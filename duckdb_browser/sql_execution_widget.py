@@ -211,6 +211,7 @@ class SQLExecutionWidget(QWidget):
     def create_content(self) -> None:
         # Create main horizontal splitter
         main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        main_splitter.setHandleWidth(20)
         self.main_layout.addWidget(main_splitter)
 
         # Create left widget for SQL input, execute button, and table view
