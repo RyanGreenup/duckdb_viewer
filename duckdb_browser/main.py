@@ -1,7 +1,21 @@
 #!/usr/bin/env python
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QTableView, QTreeView, QSplitter, QVBoxLayout, QWidget
-from PySide6.QtCore import QPersistentModelIndex, Qt, QAbstractTableModel, QModelIndex, QAbstractItemModel
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QTableView,
+    QTreeView,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
+)
+from PySide6.QtCore import (
+    QPersistentModelIndex,
+    Qt,
+    QAbstractTableModel,
+    QModelIndex,
+    QAbstractItemModel,
+)
 import duckdb
 from duckdb import DuckDBPyConnection
 from typing import Optional, Any, List, Union
@@ -10,6 +24,7 @@ import pandas as pd
 
 # Custom type for our data
 DataType = List[List[Any]]
+
 
 class TableListModel(QAbstractItemModel):
     def __init__(self, connection: DuckDBPyConnection):
@@ -21,24 +36,35 @@ class TableListModel(QAbstractItemModel):
         query = "SELECT name FROM sqlite_master WHERE type='table'"
         return [row[0] for row in self.connection.execute(query).fetchall()]
 
-    def rowCount(self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()) -> int:
+    def rowCount(
+        self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
+    ) -> int:
         return len(self.tables) if not parent.isValid() else 0
 
-    def columnCount(self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()) -> int:
+    def columnCount(
+        self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
+    ) -> int:
         return 1
 
-    def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+    def data(
+        self,
+        index: Union[QModelIndex, QPersistentModelIndex],
+        role: int = Qt.ItemDataRole.DisplayRole,
+    ) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
             return self.tables[index.row()]
         return None
 
-    def index(self, row: int, column: int, parent: QModelIndex = QModelIndex()) -> QModelIndex:
+    def index(
+        self, row: int, column: int, parent: QModelIndex = QModelIndex()
+    ) -> QModelIndex:
         if self.hasIndex(row, column, parent):
             return self.createIndex(row, column)
         return QModelIndex()
 
     def parent(self, index: QModelIndex) -> QModelIndex:
         return QModelIndex()
+
 
 class DuckDBTableModel(QAbstractTableModel):
     def __init__(self, connection: DuckDBPyConnection, table_name: str):
@@ -140,7 +166,9 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, db_path: str = ":memory:", parent: Optional[QMainWindow] = None) -> None:
+    def __init__(
+        self, db_path: str = ":memory:", parent: Optional[QMainWindow] = None
+    ) -> None:
         super().__init__(parent)
 
         # Connect to DuckDB
@@ -183,11 +211,13 @@ class MainWindow(QMainWindow):
         self.table_model = DuckDBTableModel(self.con, table_name)
         self.table_view.setModel(self.table_model)
 
+
 def main(db_path: str = "duckdb_browser.db") -> None:
     app = QApplication(sys.argv)
     window = MainWindow(db_path=db_path)
     window.show()
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     typer.run(main)
