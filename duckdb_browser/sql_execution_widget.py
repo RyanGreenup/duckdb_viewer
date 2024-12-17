@@ -210,6 +210,7 @@ class SQLExecutionWidget(QWidget):
         # Create and set up the table widget
         self.table_widget = TableWidget()
         self.table_widget.table_view.setSortingEnabled(True)
+        self.table_widget.filterChanged.connect(self.on_filter_changed)
 
         # Create and set up the SQLTextEdit
         self.text_edit = SQLTextEdit()
@@ -234,6 +235,12 @@ class SQLExecutionWidget(QWidget):
 
         # Add splitter to layout
         self.main_layout.addWidget(splitter)
+
+    def on_filter_changed(self, column: int, filter_text: str) -> None:
+        model = self.table_widget.table_view.model()
+        if isinstance(model, DuckDBTableModel):
+            model.set_filter(column, filter_text)
+            self.table_widget.adjust_columns()
 
     def setup_shortcuts(self) -> None:
         shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)

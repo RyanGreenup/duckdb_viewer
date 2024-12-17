@@ -9,26 +9,36 @@ from PySide6.QtCore import (
     Qt,
     QSize,
     QAbstractItemModel,
+    Signal,
 )
 from PySide6.QtCore import Qt as QtCore
 from typing import List, Optional
 
 class CustomHeaderWidget(QWidget):
-    def __init__(self, column_name: str, parent: Optional[QWidget] = None):
+    filterChanged = Signal(int, str)
+
+    def __init__(self, column: int, column_name: str, parent: Optional[QWidget] = None):
         super().__init__(parent)
+        self.column = column
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         
         self.filter_input = QLineEdit()
         self.filter_input.setPlaceholderText(f"Filter {column_name}")
+        self.filter_input.textChanged.connect(self.on_filter_changed)
         
         layout.addWidget(self.filter_input)
 
     def get_filter_input(self) -> QLineEdit:
         return self.filter_input
 
+    def on_filter_changed(self, text: str) -> None:
+        self.filterChanged.emit(self.column, text)
+
 class TableWidget(QWidget):
+    filterChanged = Signal(int, str)
+
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self._main_layout = QVBoxLayout(self)
@@ -48,9 +58,13 @@ class TableWidget(QWidget):
         self.header_widgets = []
         for col in range(model.columnCount()):
             column_name = model.headerData(col, Qt.Orientation.Horizontal)
-            widget = CustomHeaderWidget(column_name)
+            widget = CustomHeaderWidget(col, column_name)
+            widget.filterChanged.connect(self.on_filter_changed)
             self.header_widgets.append(widget)
             self.table_view.setIndexWidget(model.index(0, col), widget)
+
+    def on_filter_changed(self, column: int, text: str) -> None:
+        self.filterChanged.emit(column, text)
 
     def adjust_columns(self) -> None:
         header = self.table_view.horizontalHeader()
