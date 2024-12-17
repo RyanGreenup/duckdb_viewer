@@ -13,7 +13,12 @@ DataType = List[List[Any]]
 
 
 class DuckDBTableModel(QAbstractTableModel):
-    def __init__(self, connection: DuckDBPyConnection, table_name: str, result: Optional[DuckDBPyResult] = None):
+    def __init__(
+        self,
+        connection: DuckDBPyConnection,
+        table_name: str,
+        result: Optional[DuckDBPyResult] = None,
+    ):
         super().__init__()
         self.connection: DuckDBPyConnection = connection
         self.table_name: str = table_name
