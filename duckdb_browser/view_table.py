@@ -117,12 +117,16 @@ class TableWidget(QWidget):
             widget = CustomHeaderWidget(col, column_name)
             widget.filterChanged.connect(self.on_filter_changed)
             self.header_widgets.append(widget)
-            header.setSectionResizeMode(col, QHeaderView.Fixed)
+            header.setSectionResizeMode(col, QHeaderView.Interactive)  # Allow resizing
             header.setMinimumSectionSize(100)  # Set a minimum width for columns
             self.table_view.setIndexWidget(model.index(0, col), widget)
         
         # Adjust the height of the first row to accommodate the header widgets
         self.table_view.setRowHeight(0, 60)
+
+        # Enable column resizing
+        header.setSectionsMovable(False)
+        header.setStretchLastSection(True)
 
     def on_filter_changed(self, column: int, text: str) -> None:
         self.filterChanged.emit(column, text)
@@ -130,13 +134,16 @@ class TableWidget(QWidget):
     def adjust_columns(self) -> None:
         header = self.table_view.horizontalHeader()
         for col in range(self.table_view.model().columnCount()):
-            header.resizeSection(col, self.calculate_column_width(col))
+            width = self.calculate_column_width(col)
+            header.resizeSection(col, width)
+            header.setSectionResizeMode(col, QHeaderView.Interactive)  # Allow resizing
         self.table_view.setColumnHidden(0, False)  # Ensure the first column is visible
 
     def calculate_column_width(self, column: int) -> int:
         model = self.table_view.model()
         margin = 10  # Pixels
         max_width = 300  # Maximum column width
+        min_width = 100  # Minimum column width
         width = max(
             self.table_view.fontMetrics().horizontalAdvance(
                 model.headerData(column, Qt.Orientation.Horizontal)
@@ -148,7 +155,7 @@ class TableWidget(QWidget):
                 for row in range(min(10, model.rowCount()))
             ]
         )
-        return min(width + margin, max_width)
+        return max(min(width + margin, max_width), min_width)
 
     def clear_filters(self) -> None:
         for widget in self.header_widgets:
