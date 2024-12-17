@@ -8,7 +8,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QStyle,
     QProxyStyle,
+    QStyleOption,
 )
+from PySide6.QtGui import QPainter
 from PySide6.QtCore import (
     Qt,
     QAbstractItemModel,
@@ -17,16 +19,16 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QFont, QColor, QPalette, QMouseEvent, QCursor
 from PySide6.QtCore import Qt as QtCore
-from typing import List, Optional
+from typing import List, Optional, Union
 
 # Custom types
-QtAlignment = Qt.AlignmentFlag
+QtAlignment = Union[Qt.AlignmentFlag, Qt.Alignment]
 
 
 class CustomHeaderView(QHeaderView):
     def __init__(self, orientation: Qt.Orientation, parent: Optional[QWidget] = None):
         super().__init__(orientation, parent)
-        self.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.setSectionsClickable(True)
         self.setSectionsMovable(False)
         self.setStretchLastSection(True)
@@ -52,8 +54,8 @@ class CustomHeaderView(QHeaderView):
 
 
 class CustomLineEditStyle(QProxyStyle):
-    def drawPrimitive(self, element, option, painter, widget=None):
-        if element == QStyle.PE_PanelLineEdit:
+    def drawPrimitive(self, element: QStyle.PrimitiveElement, option: QStyleOption, painter: QPainter, widget: Optional[QWidget] = None) -> None:
+        if element == QStyle.PrimitiveElement.PE_PanelLineEdit:
             painter.save()
             painter.setPen(QColor("#ccc"))
             painter.setBrush(QColor("#f8f8f8"))
@@ -77,7 +79,7 @@ class CustomHeaderWidget(QWidget):
 
         # Add column name label
         label = QLabel(column_name)
-        label.setAlignment(Qt.AlignCenter)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         font = QFont()
         font.setBold(True)
         label.setFont(font)
@@ -108,8 +110,8 @@ class CustomHeaderWidget(QWidget):
 
         # Set colors
         palette = self.filter_input.palette()
-        palette.setColor(QPalette.Base, QColor("#f8f8f8"))
-        palette.setColor(QPalette.Text, QColor("#000000"))
+        palette.setColor(QPalette.ColorRole.Base, QColor("#f8f8f8"))
+        palette.setColor(QPalette.ColorRole.Text, QColor("#000000"))
         self.filter_input.setPalette(palette)
 
         # Set margins and padding
