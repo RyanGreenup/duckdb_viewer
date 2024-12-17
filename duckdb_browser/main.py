@@ -82,7 +82,7 @@ class DuckDBTableModel(QAbstractTableModel):
         self._fetch_data()
         self._sort_column = 0
         self._sort_order = Qt.SortOrder.AscendingOrder
-        self._filters: List[str] = [''] * len(self.headers)
+        self._filters: List[str] = [""] * len(self.headers)
         self._filtered_data: DataType = self._data
 
     def _fetch_data(self) -> None:
@@ -100,13 +100,18 @@ class DuckDBTableModel(QAbstractTableModel):
 
     def _apply_filters(self) -> None:
         self._filtered_data = [
-            row for row in self._data
-            if all(str(row[col]).lower().find(filter_text) != -1
-                   for col, filter_text in enumerate(self._filters)
-                   if filter_text)
+            row
+            for row in self._data
+            if all(
+                str(row[col]).lower().find(filter_text) != -1
+                for col, filter_text in enumerate(self._filters)
+                if filter_text
+            )
         ]
 
-    def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
+    def sort(
+        self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder
+    ) -> None:
         self.layoutAboutToBeChanged.emit()
         self._sort_column = column
         self._sort_order = order
@@ -115,7 +120,9 @@ class DuckDBTableModel(QAbstractTableModel):
         )
         self.layoutChanged.emit()
 
-    def rowCount(self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()) -> int:
+    def rowCount(
+        self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
+    ) -> int:
         return len(self._filtered_data)
 
     def columnCount(
@@ -123,7 +130,11 @@ class DuckDBTableModel(QAbstractTableModel):
     ) -> int:
         return len(self.headers)
 
-    def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+    def data(
+        self,
+        index: Union[QModelIndex, QPersistentModelIndex],
+        role: int = Qt.ItemDataRole.DisplayRole,
+    ) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
             return str(self._filtered_data[index.row()][index.column()])
         return None
@@ -195,7 +206,10 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
 
 class MainWindow(QMainWindow):
     def __init__(
-        self, db_path: str = ":memory:", initial_table: Optional[str] = None, parent: Optional[QMainWindow] = None
+        self,
+        db_path: str = ":memory:",
+        initial_table: Optional[str] = None,
+        parent: Optional[QMainWindow] = None,
     ) -> None:
         super().__init__(parent)
 
@@ -258,7 +272,9 @@ class MainWindow(QMainWindow):
             if index.isValid():
                 self.on_sidebar_clicked(index)
             else:
-                print(f"Table '{initial_table}' not found. Loading first available table.")
+                print(
+                    f"Table '{initial_table}' not found. Loading first available table."
+                )
                 self.load_first_table()
         else:
             self.load_first_table()
@@ -266,7 +282,10 @@ class MainWindow(QMainWindow):
     def find_table_index(self, table_name: str) -> QModelIndex:
         for row in range(self.sidebar_model.rowCount()):
             index = self.sidebar_model.index(row, 0)
-            if self.sidebar_model.data(index, Qt.ItemDataRole.DisplayRole) == table_name:
+            if (
+                self.sidebar_model.data(index, Qt.ItemDataRole.DisplayRole)
+                == table_name
+            ):
                 return index
         return QModelIndex()
 
@@ -290,8 +309,12 @@ class MainWindow(QMainWindow):
         filter_layout = self.table_view.parent().layout().itemAt(0).widget().layout()
         for col in range(self.table_model.columnCount()):
             line_edit = QLineEdit()
-            line_edit.setPlaceholderText(f"Filter {self.table_model.headerData(col, Qt.Orientation.Horizontal)}")
-            line_edit.textChanged.connect(lambda text, column=col: self.apply_filter(text, column))
+            line_edit.setPlaceholderText(
+                f"Filter {self.table_model.headerData(col, Qt.Orientation.Horizontal)}"
+            )
+            line_edit.textChanged.connect(
+                lambda text, column=col: self.apply_filter(text, column)
+            )
             filter_layout.addWidget(line_edit)
             self.filter_inputs.append(line_edit)
 
