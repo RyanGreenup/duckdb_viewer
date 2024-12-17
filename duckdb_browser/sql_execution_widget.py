@@ -7,30 +7,48 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCursor, QTextDocument
+from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QPalette
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
 from model_table import DuckDBTableModel
-from pygments import highlight
+from pygments import lex
 from pygments.lexers import SqlLexer
-from pygments.formatters import HtmlFormatter
+from pygments.token import Token
 
 
 class SQLSyntaxHighlighter(QSyntaxHighlighter):
-    def __init__(self, parent: QTextDocument):
+    def __init__(self, parent):
         super().__init__(parent)
         self.lexer = SqlLexer()
-        self.formatter = HtmlFormatter(style="default")
+        self.styles = self.generate_styles()
 
-    def highlightBlock(self, text: str) -> None:
-        html = highlight(text, self.lexer, self.formatter)
-        cursor = QTextCursor(self.document())
-        cursor.setPosition(self.currentBlock().position())
-        cursor.setPosition(
-            self.currentBlock().position() + self.currentBlock().length(),
-            QTextCursor.MoveMode.KeepAnchor,
-        )
-        cursor.insertHtml(html)
+    def generate_styles(self):
+        styles = {}
+        styles[Token.Keyword] = self.format_for_token(Token.Keyword, '#007020', 'bold')
+        styles[Token.String] = self.format_for_token(Token.String, '#4070a0')
+        styles[Token.Number] = self.format_for_token(Token.Number, '#40a070')
+        styles[Token.Operator] = self.format_for_token(Token.Operator, '#666666')
+        styles[Token.Punctuation] = self.format_for_token(Token.Punctuation, '#666666')
+        styles[Token.Comment] = self.format_for_token(Token.Comment, '#60a0b0', 'italic')
+        return styles
+
+    def format_for_token(self, token, color, font_style=None):
+        text_format = QTextCharFormat()
+        text_format.setForeground(QColor(color))
+        if font_style == 'bold':
+            text_format.setFontWeight(QTextCharFormat.Bold)
+        elif font_style == 'italic':
+            text_format.setFontItalic(True)
+        return text_format
+
+    def highlightBlock(self, text):
+        for token, value in lex(text, self.lexer):
+            if token in self.styles:
+                self.setFormat(
+                    self.currentBlock().position(),
+                    len(value),
+                    self.styles[token]
+                )
 
 
 class SQLTextEdit(QTextEdit):
@@ -40,7 +58,9 @@ class SQLTextEdit(QTextEdit):
         self.setPlaceholderText("Enter your SQL query here...")
 
     def set_background_color(self, color: QColor) -> None:
-        self.setStyleSheet(f"background-color: {color.name()};")
+        palette = self.palette()
+        palette.setColor(QPalette.Base, color)
+        self.setPalette(palette)
 
 
 class SQLExecutionWidget(QWidget):
