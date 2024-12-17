@@ -7,6 +7,10 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QAbstractItemView,
     QTabWidget,
+    QMenuBar,
+    QStatusBar,
+    QMenu,
+    QMessageBox,
 )
 from typing import List, Optional
 from PySide6.QtCore import Qt, QModelIndex
@@ -37,6 +41,13 @@ class MainWindow(QMainWindow):
         parent: Optional[QMainWindow] = None,
     ) -> None:
         super().__init__(parent)
+
+        # Create menu bar
+        self.create_menu_bar()
+
+        # Create status bar
+        self.statusBar = QStatusBar()
+        self.setStatusBar(self.statusBar)
 
         # Connect to DuckDB
         self.con = create_connection(db_path=db_path)
@@ -175,6 +186,8 @@ class MainWindow(QMainWindow):
         # Update the main layout
         self.table_widget.get_main_layout().update()
 
+        self.statusBar.showMessage(f"Loaded {name} with {self.table_model.rowCount()} rows")
+
     def calculate_column_width(self, column: int) -> int:
         font_metrics = self.table_widget.table_view.fontMetrics()
         header_width = (
@@ -199,6 +212,50 @@ class MainWindow(QMainWindow):
 
     def apply_filter(self, text: str, column: int) -> None:
         self.table_model.set_filter(column, text)
+        filtered_row_count = self.table_model.rowCount()
+        total_row_count = self.table_model.get_total_row_count()
+        self.statusBar.showMessage(f"Showing {filtered_row_count} of {total_row_count} rows")
+
+    def create_menu_bar(self) -> None:
+        menu_bar = QMenuBar(self)
+        self.setMenuBar(menu_bar)
+
+        # File menu
+        file_menu = QMenu("&File", self)
+        menu_bar.addMenu(file_menu)
+
+        # Add actions to File menu
+        exit_action = file_menu.addAction("E&xit")
+        exit_action.triggered.connect(self.close)
+
+        # Edit menu
+        edit_menu = QMenu("&Edit", self)
+        menu_bar.addMenu(edit_menu)
+
+        # Add actions to Edit menu
+        clear_filters_action = edit_menu.addAction("&Clear Filters")
+        clear_filters_action.triggered.connect(self.clear_all_filters)
+
+        # Help menu
+        help_menu = QMenu("&Help", self)
+        menu_bar.addMenu(help_menu)
+
+        # Add actions to Help menu
+        about_action = help_menu.addAction("&About")
+        about_action.triggered.connect(self.show_about_dialog)
+
+    def clear_all_filters(self) -> None:
+        self.table_widget.clear_filters()
+        for filter_input in self.filter_inputs:
+            filter_input.clear()
+        self.table_model.clear_all_filters()
+
+    def show_about_dialog(self) -> None:
+        QMessageBox.about(
+            self,
+            "About DuckDB Browser",
+            "DuckDB Browser is a simple GUI for browsing DuckDB databases."
+        )
 
 
 def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
