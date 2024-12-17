@@ -28,7 +28,7 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
         cursor.setPosition(self.currentBlock().position())
         cursor.setPosition(
             self.currentBlock().position() + self.currentBlock().length(),
-            QTextCursor.KeepAnchor
+            QTextCursor.MoveMode.KeepAnchor,
         )
         cursor.insertHtml(html)
 
@@ -39,7 +39,7 @@ class SQLTextEdit(QTextEdit):
         self.highlighter = SQLSyntaxHighlighter(self.document())
         self.setPlaceholderText("Enter your SQL query here...")
 
-    def set_background_color(self, color: QColor):
+    def set_background_color(self, color: QColor) -> None:
         self.setStyleSheet(f"background-color: {color.name()};")
 
 
