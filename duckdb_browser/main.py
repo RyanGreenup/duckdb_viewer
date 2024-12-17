@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QHeaderView,
 )
-from typing import List, Optional, Union
+from typing import List, Optional, Union, cast
 from PySide6.QtCore import (
     QPersistentModelIndex,
     Qt,
@@ -89,7 +89,7 @@ class TableListModel(QAbstractItemModel):
         self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
     ) -> int:
         if parent.isValid():
-            item = parent.internalPointer()
+            item: DatabaseItem = parent.internalPointer()
             return item.child_count()
         return self.root.child_count()
 
@@ -127,7 +127,7 @@ class TableListModel(QAbstractItemModel):
         if not parent.isValid():
             parent_item = self.root
         else:
-            parent_item = parent.internalPointer()
+            parent_item = cast(DatabaseItem, parent.internalPointer())
 
         child_item = parent_item.children[row]
         if child_item:
