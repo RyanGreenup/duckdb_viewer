@@ -60,7 +60,9 @@ class FilterHeader(QHeaderView):
 
 
 class TableHeader(QHeaderView):
-    def __init__(self, orientation: Qt.Orientation, parent: Optional[QWidget] = None) -> None:
+    def __init__(
+        self, orientation: Qt.Orientation, parent: Optional[QWidget] = None
+    ) -> None:
         super().__init__(orientation, parent)
         self.setSectionsClickable(True)
         self.setSortIndicatorShown(True)
