@@ -17,7 +17,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QFont, QColor, QPalette, QMouseEvent, QCursor
 from PySide6.QtCore import Qt as QtCore
-from typing import List, Optional, Union
+from typing import List, Optional
 
 # Custom types
 QtAlignment = Qt.AlignmentFlag
