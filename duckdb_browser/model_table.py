@@ -61,7 +61,8 @@ class DuckDBTableModel(QAbstractTableModel):
         self.headers = [(col[0], str(col[1])) for col in result.description]
 
         # Fetch data
-        self._data = result.fetchall()
+        fetched_data = result.fetchall()
+        self._data = [list(row) for row in fetched_data]  # Convert tuples to lists
         self._filtered_data = self._data
 
         # Initialize filters
