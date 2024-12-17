@@ -89,11 +89,13 @@ class DuckDBTableModel(QAbstractTableModel):
     def sort(
         self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder
     ) -> None:
+        self.layoutAboutToBeChanged.emit()
         self._sort_column = column
         self._sort_order = order
         self._data.sort(
             key=lambda x: x[column], reverse=(order == Qt.SortOrder.DescendingOrder)
         )
+        self.layoutChanged.emit()
 
     def rowCount(
         self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
