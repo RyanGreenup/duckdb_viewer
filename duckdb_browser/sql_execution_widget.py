@@ -6,7 +6,9 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QPushButton,
     QCompleter,
+    QShortcut,
 )
+from PySide6.QtGui import QKeySequence
 from PySide6.QtCore import Qt, QStringListModel
 from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtGui import (
@@ -193,6 +195,7 @@ class SQLExecutionWidget(QWidget):
         self.execute_button: QPushButton
         self.create_content()
         self.update_completions()
+        self.setup_shortcuts()
 
     def create_content(self) -> None:
         # Create splitter
@@ -225,6 +228,10 @@ class SQLExecutionWidget(QWidget):
 
         # Add splitter to layout
         self.main_layout.addWidget(splitter)
+
+    def setup_shortcuts(self) -> None:
+        shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)
+        shortcut.activated.connect(self.on_execute_clicked)
 
     def on_execute_clicked(self) -> None:
         query = self.text_edit.toPlainText()
