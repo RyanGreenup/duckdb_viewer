@@ -120,6 +120,8 @@ class TableWidget(QWidget):
         from PySide6.QtGui import QStandardItemModel
 
         error_model = QStandardItemModel(1, 1)
-        error_model.setData(error_model.index(0, 0), error_message, QtCore.ItemDataRole.DisplayRole)
+        error_model.setData(
+            error_model.index(0, 0), error_message, QtCore.ItemDataRole.DisplayRole
+        )
         self.table_view.setModel(error_model)
         self.combined_header.setFilterWidgets(1)

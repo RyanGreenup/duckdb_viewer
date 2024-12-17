@@ -99,7 +99,6 @@ class MainWindow(QMainWindow):
         # Add splitter to tab1 layout
         self.tab1_layout.addWidget(splitter)
 
-
     def load_initial_table(self, initial_table: Optional[str] = None) -> None:
         if initial_table:
             # Try to load the specified table
