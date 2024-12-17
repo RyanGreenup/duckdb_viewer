@@ -100,7 +100,7 @@ class PlottingWidget(QWidget):
             self.plot_data(x_col, y_col)
 
     def plot_data(self, x_col: str, y_col: str) -> None:
-        if self.data is None:
+        if self.data is None or x_col == '' or y_col == '':
             return
 
         self.chart.removeAllSeries()
@@ -111,30 +111,44 @@ class PlottingWidget(QWidget):
         if plot_type == "Scatter":
             series = QScatterSeries()
             for x, y in zip(self.data[x_col], self.data[y_col]):
-                series.append(float(x), float(y))
+                if x is not None and y is not None:
+                    try:
+                        series.append(float(x), float(y))
+                    except ValueError:
+                        continue  # Skip this point if conversion fails
             self.chart.addSeries(series)
         elif plot_type == "Line":
             series = QLineSeries()
             for x, y in zip(self.data[x_col], self.data[y_col]):
-                series.append(float(x), float(y))
+                if x is not None and y is not None:
+                    try:
+                        series.append(float(x), float(y))
+                    except ValueError:
+                        continue  # Skip this point if conversion fails
             self.chart.addSeries(series)
         elif plot_type == "Bar":
             series = QBarSeries()
-            bar_set = QBarSet(y_col)
+            bar_set = QBarSet(str(y_col))
             for y in self.data[y_col]:
-                bar_set.append(float(y))
+                if y is not None:
+                    try:
+                        bar_set.append(float(y))
+                    except ValueError:
+                        bar_set.append(0)  # Use 0 for invalid values
+                else:
+                    bar_set.append(0)  # Use 0 for None values
             series.append(bar_set)
             self.chart.addSeries(series)
 
         self.chart.setTitle(f"{plot_type} Plot: {x_col} vs {y_col}")
         self.chart.createDefaultAxes()
         x_axis = self.chart.axes(Qt.Horizontal)[0]
-        x_axis.setTitleText(x_col)
+        x_axis.setTitleText(str(x_col))
         y_axis = self.chart.axes(Qt.Vertical)[0]
-        y_axis.setTitleText(y_col)
+        y_axis.setTitleText(str(y_col))
 
         if plot_type == "Bar":
-            categories = [str(x) for x in self.data[x_col]]
+            categories = [str(x) if x is not None else '' for x in self.data[x_col]]
             x_axis.setCategories(categories)
 
         self.chart_view.update()
