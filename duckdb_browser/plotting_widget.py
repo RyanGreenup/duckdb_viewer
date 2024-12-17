@@ -23,10 +23,12 @@ from PySide6.QtCharts import (
 from PySide6.QtGui import QColor
 import pandas as pd
 import numpy as np
-from typing import Optional, List, Tuple, Dict, Union
+from typing import Optional, List, Tuple, Dict, Union, TypeVar
 from numpy.typing import NDArray
 from enum import Enum, auto
 from pandas import Series
+
+T = TypeVar('T')
 
 # Custom type for the return value of _convert_to_numeric_or_categorical
 NumericOrCategoricalResult = Tuple[Series, Optional[List[str]]]
@@ -208,11 +210,7 @@ class PlottingWidget(QWidget):
         valid_data = valid_data.dropna()
 
         # Handle empty color column
-        if color_col == "None":
-            color_col = None
-        elif color_col not in valid_data.columns:
-            color_col = None
-        elif valid_data["color"].empty:
+        if color_col == "None" or color_col not in valid_data.columns or valid_data['color'].empty:
             color_col = None
 
         match plot_type:
@@ -253,10 +251,10 @@ class PlottingWidget(QWidget):
 
     def _convert_to_numeric_or_categorical(
         self, data: pd.Series
-    ) -> NumericOrCategoricalResult:
+    ) -> Tuple[pd.Series[Union[int, float]], Optional[List[str]]]:
         if data.dtype == "object":
             categories = data.unique().tolist()
-            return pd.Series(pd.Categorical(data).codes), categories  # type: ignore
+            return pd.Series(pd.Categorical(data).codes, dtype=int), categories
         else:
             return pd.to_numeric(data, errors="coerce"), None
 
@@ -407,16 +405,16 @@ class PlottingWidget(QWidget):
 
     def _set_axis_labels(
         self,
-        x_axis,
-        y_axis,
-        plot_type,
-        x_col,
-        y_col,
-        valid_data,
-        color_col,
-        x_categories,
-        y_categories,
-    ):
+        x_axis: Union[QValueAxis, QBarCategoryAxis],
+        y_axis: Union[QValueAxis, QBarCategoryAxis],
+        plot_type: PlotType,
+        x_col: str,
+        y_col: str,
+        valid_data: pd.DataFrame,
+        color_col: Optional[str],
+        x_categories: Optional[List[str]],
+        y_categories: Optional[List[str]]
+    ) -> None:
         if x_axis is None or y_axis is None:
             return
 
