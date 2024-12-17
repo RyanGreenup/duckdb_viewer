@@ -208,13 +208,13 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
 class TableWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.layout = QVBoxLayout(self)
+        self._layout = QVBoxLayout(self)
         self.filter_widget = QWidget(self)
         self.filter_layout = QHBoxLayout(self.filter_widget)
         self.filter_layout.setContentsMargins(0, 0, 0, 0)
         self.table_view = QTableView(self)
-        self.layout.addWidget(self.filter_widget)
-        self.layout.addWidget(self.table_view)
+        self._layout.addWidget(self.filter_widget)
+        self._layout.addWidget(self.table_view)
 
     def clear_filters(self) -> None:
         while self.filter_layout.count():
@@ -227,6 +227,10 @@ class TableWidget(QWidget):
         line_edit.setPlaceholderText(placeholder)
         self.filter_layout.addWidget(line_edit)
         return line_edit
+
+    @property
+    def layout(self) -> QVBoxLayout:
+        return self._layout
 
 
 class MainWindow(QMainWindow):
