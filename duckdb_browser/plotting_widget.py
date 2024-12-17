@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet, QValueAxis
+from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet, QValueAxis, QBoxPlotSeries
 from PySide6.QtGui import QPainter
 import pandas as pd
 import numpy as np
@@ -22,7 +22,7 @@ class PlottingWidget(QWidget):
         self.x_combo = QComboBox()
         self.y_combo = QComboBox()
         self.plot_type_combo = QComboBox()
-        self.plot_type_combo.addItems(["Scatter", "Line", "Bar", "Histogram"])
+        self.plot_type_combo.addItems(["Scatter", "Line", "Bar", "Histogram", "Box Plot"])
 
         # Set minimum width for combo boxes
         min_width = 150
@@ -144,8 +144,25 @@ class PlottingWidget(QWidget):
                 bar_set.append(float(count))
             series.append(bar_set)
             self.chart.addSeries(series)
+        elif plot_type == "Box Plot":
+            series = QBoxPlotSeries()
+            series.setName(str(y_col))
 
-        self.chart.setTitle(f"{plot_type} Plot: {x_col}")
+            # Calculate box plot statistics
+            q1 = np.percentile(valid_data['y'], 25)
+            median = np.median(valid_data['y'])
+            q3 = np.percentile(valid_data['y'], 75)
+            iqr = q3 - q1
+            lower_bound = q1 - 1.5 * iqr
+            upper_bound = q3 + 1.5 * iqr
+
+            # Create a QBoxSet for the entire dataset
+            box_set = QBoxSet(lower_bound, q1, median, q3, upper_bound)
+            series.append(box_set)
+
+            self.chart.addSeries(series)
+
+        self.chart.setTitle(f"{plot_type}: {y_col}")
         self.chart.createDefaultAxes()
         x_axis = self.chart.axes(Qt.Horizontal)[0]
         y_axis = self.chart.axes(Qt.Vertical)[0]
@@ -155,6 +172,10 @@ class PlottingWidget(QWidget):
             y_axis.setTitleText("Frequency")
             categories = [f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}" for i in range(len(bin_edges)-1)]
             x_axis.setCategories(categories)
+        elif plot_type == "Box Plot":
+            x_axis.setTitleText(str(y_col))
+            y_axis.setTitleText("Value")
+            x_axis.setLabelsVisible(False)
         else:
             x_axis.setTitleText(str(x_col))
             y_axis.setTitleText(str(y_col))
