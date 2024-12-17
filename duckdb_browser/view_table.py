@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QStyleOptionFrame,
     QStyle,
-    QCommonStyle,
+    QProxyStyle,
 )
 from PySide6.QtCore import (
     Qt,
@@ -16,9 +16,20 @@ from PySide6.QtCore import (
     QAbstractItemModel,
     Signal,
 )
-from PySide6.QtGui import QFont, QColor, QPalette, QPainter
+from PySide6.QtGui import QFont, QColor, QPalette
 from PySide6.QtCore import Qt as QtCore
 from typing import List, Optional
+
+class CustomLineEditStyle(QProxyStyle):
+    def drawPrimitive(self, element, option, painter, widget=None):
+        if element == QStyle.PE_PanelLineEdit:
+            painter.save()
+            painter.setPen(QColor("#ccc"))
+            painter.setBrush(QColor("#f8f8f8"))
+            painter.drawRect(option.rect.adjusted(0, 0, -1, -1))
+            painter.restore()
+        else:
+            super().drawPrimitive(element, option, painter, widget)
 
 class CustomHeaderWidget(QWidget):
     filterChanged = Signal(int, str)
@@ -59,18 +70,9 @@ class CustomHeaderWidget(QWidget):
         layout.addLayout(filter_layout)
 
     def style_filter_input(self):
-        # Use QStyle to set the look of the QLineEdit
-        option = QStyleOptionFrame()
-        option.initFrom(self.filter_input)
-        option.state |= QStyle.State_Sunken
-        option.features = QStyleOptionFrame.None_
-        option.lineWidth = 1
-        option.midLineWidth = 0
-
-        # Set the frame style
-        self.filter_input.setFrame(True)
-        self.filter_input.setStyle(QCommonStyle())
-        self.filter_input.style().drawPrimitive(QStyle.PE_PanelLineEdit, option, QPainter(self.filter_input), self.filter_input)
+        # Set custom style
+        custom_style = CustomLineEditStyle()
+        self.filter_input.setStyle(custom_style)
 
         # Set colors
         palette = self.filter_input.palette()
