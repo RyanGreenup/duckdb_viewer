@@ -1,11 +1,63 @@
 #!/usr/bin/env python
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QTableView
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
 import duckdb
 from duckdb import DuckDBPyConnection
 from typing import Optional
 import typer
+import pandas as pd
+
+class DuckDBTableModel(QAbstractTableModel):
+    def __init__(self, connection: DuckDBPyConnection, table_name: str):
+        super().__init__()
+        self.connection = connection
+        self.table_name = table_name
+        self.data = self._fetch_data()
+        self.headers = self.data.columns.tolist()
+
+    def _fetch_data(self):
+        query = f"SELECT * FROM {self.table_name}"
+        return self.connection.execute(query).df()
+
+    def rowCount(self, parent=QModelIndex()):
+        return len(self.data)
+
+    def columnCount(self, parent=QModelIndex()):
+        return len(self.headers)
+
+    def data(self, index, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole:
+            return str(self.data.iloc[index.row(), index.column()])
+        return None
+
+    def headerData(self, section, orientation, role=Qt.DisplayRole):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return self.headers[section]
+        return None
+
+    def setData(self, index, value, role=Qt.EditRole):
+        if role == Qt.EditRole:
+            row = index.row()
+            col = index.column()
+            column_name = self.headers[col]
+            old_value = self.data.iloc[row, col]
+            self.data.iloc[row, col] = value
+            
+            # Update the database
+            update_query = f"""
+            UPDATE {self.table_name}
+            SET {column_name} = ?
+            WHERE id = ?
+            """
+            self.connection.execute(update_query, [value, self.data.iloc[row, 0]])
+            
+            self.dataChanged.emit(index, index, [role])
+            return True
+        return False
+
+    def flags(self, index):
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
 
 
 def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
@@ -13,12 +65,16 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
     con = duckdb.connect(database=db_path, read_only=False)
 
     # Create a table and insert some data if the table does not exist
-    try:
-        con.execute("SELECT * FROM test")
-    except duckdb.CatalogException:
-        con.execute("CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT)")
-        con.execute("INSERT INTO test VALUES (1, 'John')")
-        con.execute("INSERT INTO test VALUES (2, 'Jane')")
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS test (
+            id INTEGER PRIMARY KEY,
+            name TEXT
+        )
+    """)
+    
+    # Check if the table is empty and insert initial data if needed
+    if con.execute("SELECT COUNT(*) FROM test").fetchone()[0] == 0:
+        con.execute("INSERT INTO test VALUES (1, 'John'), (2, 'Jane')")
 
     return con
 
@@ -52,7 +108,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.view)
 
 
-def main(db_path: str = ":memory:") -> None:
+def main(db_path: str = "duckdb_browser.db") -> None:
     app = QApplication(sys.argv)
     window = MainWindow(db_path=db_path)
     window.show()
