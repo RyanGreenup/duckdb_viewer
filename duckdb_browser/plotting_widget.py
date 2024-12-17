@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QSizePolicy,
 )
-from PySide6.QtCore import Qt, QPointF, QObject
+from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QPainter
 from PySide6.QtCharts import (
     QChart,
