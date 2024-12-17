@@ -211,10 +211,9 @@ class PlottingWidget(QWidget):
         })
         
         # Handle empty color column
-        color_col_opt: Optional[str] = None
-        if color_col != "None":
-            valid_data[color_col] = self.data[color_col]
-            color_col_opt = color_col
+        color_col_opt = color_col if color_col != "None" else None
+        if color_col_opt:
+            valid_data[color_col_opt] = self.data[color_col_opt]
 
         valid_data = valid_data.dropna()
 
@@ -265,14 +264,14 @@ class PlottingWidget(QWidget):
             return pd.to_numeric(data, errors="coerce"), None
 
     def _plot_scatter(self, valid_data: pd.DataFrame, color_col: Optional[str]) -> None:
-        if color_col:
-            unique_colors = valid_data["color"].unique()
+        if color_col and color_col != "None":
+            unique_colors = valid_data[color_col].unique()
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
                 series = QScatterSeries()
                 series.setName(f"{color_col}: {color}")
                 series.setColor(color_map[color])
-                color_data = valid_data[valid_data["color"] == color]
+                color_data = valid_data[valid_data[color_col] == color]
                 for _y, _x, y_plot, x_plot in zip(
                     color_data["y"],
                     color_data["x"],
