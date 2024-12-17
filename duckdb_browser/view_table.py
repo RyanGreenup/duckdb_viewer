@@ -64,7 +64,7 @@ class CustomLineEditStyle(QProxyStyle):
             painter.save()
             painter.setPen(QColor("#ccc"))
             painter.setBrush(QColor("#f8f8f8"))
-            painter.drawRect(option.rect.adjusted(0, 0, -1, -1))
+            painter.drawRect(option.rect().adjusted(0, 0, -1, -1))
             painter.restore()
         else:
             super().drawPrimitive(element, option, painter, widget)
