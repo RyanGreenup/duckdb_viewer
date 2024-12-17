@@ -318,10 +318,10 @@ class MainWindow(QMainWindow):
 
 
 class SchemaDialog(QDialog):
-    con: DuckDBPyConnection
+    con: Optional[DuckDBPyConnection]
 
     def __init__(
-        self, parent: Optional[QWidget] = None, con: DuckDBPyConnection = None
+        self, parent: Optional[QWidget] = None, con: Optional[DuckDBPyConnection] = None
     ):
         super().__init__(parent)
         self.con = con
@@ -339,7 +339,7 @@ class SchemaDialog(QDialog):
 
     def show_schema(self) -> None:
         if not self.con:
-            QMessageBox.warning(
+            QMessageBox.warning(  # type: ignore
                 self,
                 "No Database Open",
                 "Please open a database before viewing the schema.",
@@ -357,7 +357,7 @@ class SchemaDialog(QDialog):
 
     def show_sql_schema(self) -> None:
         if not self.con:
-            QMessageBox.warning(
+            QMessageBox.warning(  # type: ignore
                 self,
                 "No Database Open",
                 "Please open a database before viewing the schema.",
