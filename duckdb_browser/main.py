@@ -8,6 +8,9 @@ from PySide6.QtWidgets import (
     QSplitter,
     QVBoxLayout,
     QWidget,
+    QHBoxLayout,
+    QLineEdit,
+    QHeaderView,
 )
 from PySide6.QtCore import (
     QPersistentModelIndex,
@@ -79,41 +82,50 @@ class DuckDBTableModel(QAbstractTableModel):
         self._fetch_data()
         self._sort_column = 0
         self._sort_order = Qt.SortOrder.AscendingOrder
+        self._filters: List[str] = [''] * len(self.headers)
+        self._filtered_data: DataType = self._data
 
     def _fetch_data(self) -> None:
         query = f"SELECT * FROM {self.table_name}"
         df: pd.DataFrame = self.connection.execute(query).df()
         self._data = df.values.tolist()
         self.headers = df.columns.tolist()
+        self._filtered_data = self._data
 
-    def sort(
-        self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder
-    ) -> None:
+    def set_filter(self, column: int, filter_text: str) -> None:
+        self.layoutAboutToBeChanged.emit()
+        self._filters[column] = filter_text.lower()
+        self._apply_filters()
+        self.layoutChanged.emit()
+
+    def _apply_filters(self) -> None:
+        self._filtered_data = [
+            row for row in self._data
+            if all(str(row[col]).lower().find(filter_text) != -1
+                   for col, filter_text in enumerate(self._filters)
+                   if filter_text)
+        ]
+
+    def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
         self.layoutAboutToBeChanged.emit()
         self._sort_column = column
         self._sort_order = order
-        self._data.sort(
+        self._filtered_data.sort(
             key=lambda x: x[column], reverse=(order == Qt.SortOrder.DescendingOrder)
         )
         self.layoutChanged.emit()
 
-    def rowCount(
-        self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
-    ) -> int:
-        return len(self._data)
+    def rowCount(self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()) -> int:
+        return len(self._filtered_data)
 
     def columnCount(
         self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
     ) -> int:
         return len(self.headers)
 
-    def data(
-        self,
-        index: Union[QModelIndex, QPersistentModelIndex],
-        role: int = Qt.ItemDataRole.DisplayRole,
-    ) -> Any:
+    def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
-            return str(self._data[index.row()][index.column()])
+            return str(self._filtered_data[index.row()][index.column()])
         return None
 
     def headerData(
@@ -208,9 +220,24 @@ class MainWindow(QMainWindow):
         self.table_view = QTableView()
         self.table_view.setSortingEnabled(True)
 
+        # Create a widget to hold the table view and filter inputs
+        table_widget = QWidget()
+        table_layout = QVBoxLayout(table_widget)
+
+        # Create a widget for filter inputs
+        filter_widget = QWidget()
+        filter_layout = QHBoxLayout(filter_widget)
+        filter_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.filter_inputs: List[QLineEdit] = []
+
+        # Add filter widget and table view to the table layout
+        table_layout.addWidget(filter_widget)
+        table_layout.addWidget(self.table_view)
+
         # Add views to splitter
         splitter.addWidget(self.sidebar)
-        splitter.addWidget(self.table_view)
+        splitter.addWidget(table_widget)
 
         # Set splitter sizes
         splitter.setSizes([200, 600])  # Adjust these values as needed
@@ -253,6 +280,27 @@ class MainWindow(QMainWindow):
         self.table_model = DuckDBTableModel(self.con, table_name)
         self.table_view.setModel(self.table_model)
         self.sidebar.setCurrentIndex(index)
+
+        # Clear existing filter inputs
+        for input in self.filter_inputs:
+            input.deleteLater()
+        self.filter_inputs.clear()
+
+        # Create new filter inputs
+        filter_layout = self.table_view.parent().layout().itemAt(0).widget().layout()
+        for col in range(self.table_model.columnCount()):
+            line_edit = QLineEdit()
+            line_edit.setPlaceholderText(f"Filter {self.table_model.headerData(col, Qt.Orientation.Horizontal)}")
+            line_edit.textChanged.connect(lambda text, column=col: self.apply_filter(text, column))
+            filter_layout.addWidget(line_edit)
+            self.filter_inputs.append(line_edit)
+
+        # Adjust column widths
+        header = self.table_view.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
+    def apply_filter(self, text: str, column: int) -> None:
+        self.table_model.set_filter(column, text)
 
 
 def main(db_path: str = "duckdb_browser.db", table_name: Optional[str] = None) -> None:
