@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QLabel,
 )
+from PySide6.QtCore import Qt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import seaborn as sns
@@ -26,6 +27,39 @@ class PlottingWidget(QWidget):
         self.plot_type_combo.addItems(["Scatter", "Line", "Bar"])
         self.update_button = QPushButton("Update Plot")
 
+        # Set minimum width for combo boxes
+        min_width = 150
+        self.x_combo.setMinimumWidth(min_width)
+        self.y_combo.setMinimumWidth(min_width)
+        self.plot_type_combo.setMinimumWidth(min_width)
+
+        # Apply stylesheet for a more professional look
+        style = """
+        QComboBox {
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 5px;
+            min-height: 25px;
+        }
+        QComboBox::drop-down {
+            subcontrol-origin: padding;
+            subcontrol-position: top right;
+            width: 25px;
+            border-left: 1px solid #ccc;
+        }
+        QComboBox::down-arrow {
+            image: url(down_arrow.png);
+        }
+        """
+        self.x_combo.setStyleSheet(style)
+        self.y_combo.setStyleSheet(style)
+        self.plot_type_combo.setStyleSheet(style)
+
+        # Set size policy to expand horizontally
+        self.x_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.y_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.plot_type_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
         combo_layout = QHBoxLayout()
         combo_layout.addWidget(QLabel("Plot Type:"))
         combo_layout.addWidget(self.plot_type_combo)
@@ -35,6 +69,8 @@ class PlottingWidget(QWidget):
         combo_layout.addWidget(self.y_combo)
         combo_layout.addWidget(self.update_button)
         self.update_button.hide()  # Hide the update button as it's no longer needed
+        combo_layout.setAlignment(Qt.AlignTop)
+        combo_layout.setSpacing(10)
         self._layout.addLayout(combo_layout)
 
         self.figure: Figure = Figure(figsize=(5, 4), dpi=100)
