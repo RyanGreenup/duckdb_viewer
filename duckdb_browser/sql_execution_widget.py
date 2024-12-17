@@ -95,6 +95,13 @@ class SQLTextEdit(QTextEdit):
             if event.key() in (Qt.Key_Enter, Qt.Key_Return, Qt.Key_Tab, Qt.Key_Space):
                 event.ignore()
                 return
+            elif event.key() == Qt.Key_N and event.modifiers() & Qt.ControlModifier:
+                self.completer.setCurrentRow(self.completer.currentRow() + 1)
+                return
+            elif event.key() == Qt.Key_P and event.modifiers() & Qt.ControlModifier:
+                self.completer.setCurrentRow(self.completer.currentRow() - 1)
+                return
+
         super().keyPressEvent(event)
         
         ctrl_or_shift = event.modifiers() & (Qt.ControlModifier | Qt.ShiftModifier)
