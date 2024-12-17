@@ -23,7 +23,6 @@ from PySide6.QtGui import QPainter, QColor
 import pandas as pd
 import numpy as np
 from typing import Optional, List, Tuple, Dict, Union
-import numpy as np
 from numpy.typing import NDArray
 from enum import Enum, auto
 
@@ -373,10 +372,14 @@ class PlottingWidget(QWidget):
 
     ColorMap = Dict[Union[str, float], QColor]
 
-    def _get_color_map(self, unique_colors: Union[NDArray, List[Union[str, float]]]) -> ColorMap:
+    def _get_color_map(
+        self, unique_colors: Union[NDArray, List[Union[str, float]]]
+    ) -> ColorMap:
         return {
             str(color): QColor(
-                hash(str(color)) % 256, hash(str(color) * 2) % 256, hash(str(color) * 3) % 256
+                hash(str(color)) % 256,
+                hash(str(color) * 2) % 256,
+                hash(str(color) * 3) % 256,
             )
             for color in unique_colors
         }

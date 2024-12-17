@@ -6,7 +6,6 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QPushButton,
     QCompleter,
-    QHBoxLayout,
 )
 from PySide6.QtCore import Qt
 from utils_get_schema import get_complete_schema

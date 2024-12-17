@@ -175,7 +175,7 @@ class TableWidget(QWidget):
         self.header_widgets = []
         for col in range(model.columnCount()):
             column_name = model.headerData(col, Qt.Orientation.Horizontal)
-            if column_name is None or column_name == '':
+            if column_name is None or column_name == "":
                 column_name = f"Column {col}"
             widget = CustomHeaderWidget(col, str(column_name))
             widget.filterChanged.connect(self.on_filter_changed)
@@ -210,7 +210,10 @@ class TableWidget(QWidget):
         max_width = 300  # Maximum column width
         min_width = 100  # Minimum column width
         header_width = self.table_view.fontMetrics().horizontalAdvance(
-            str(model.headerData(column, Qt.Orientation.Horizontal) or f"Column {column}")
+            str(
+                model.headerData(column, Qt.Orientation.Horizontal)
+                or f"Column {column}"
+            )
         )
         data_width = max(
             self.table_view.fontMetrics().horizontalAdvance(

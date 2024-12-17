@@ -9,6 +9,17 @@
 - Create new tables with a form
 - Paginate the Table for large tables
 
+
+### Plotting
+- [x] Hover Details
+- [ ] Add a legend
+- Create a double ended slider to limit the x and y-axis
+- [x] Labels for x-axis and y-axis combo boxes are reversed from the combo boxes.
+- The plots should have a slider to control how much data
+    - Just take a sample (without replacement) of size max(N, n)
+- [ ] Rotate x-axis 45 degrees
+    - Make a bit of a gap at the bottom
+
 ## Features being implemented
 
 - Execute SQL Tab
