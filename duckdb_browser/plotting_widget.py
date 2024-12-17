@@ -226,8 +226,6 @@ class PlottingWidget(QWidget):
         else:
             color_col = str(color_col)
 
-        color_col_str: Optional[str] = color_col
-
         match plot_type:
             case PlotType.SCATTER:
                 self._plot_scatter(valid_data, color_col)
