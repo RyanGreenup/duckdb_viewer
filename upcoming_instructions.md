@@ -2,8 +2,11 @@
 
 ## Required Features
 
-- Get Schema to clipboard command
-    - Keybidning
+- Double click to set column width
+- Drag to make table wider
+- Horizontal scroll should be impleemented in the Execute SQL Tab
+    - Make this a part of the Table view widget
+- User should be able to filter in the Execute SQL tab
 
 ## Nice Fetures
 
@@ -27,6 +30,7 @@
 
 ## DONE
 
+## General
 - Filter columns with string
 - Show full db structure including tables, views, columns etc.
     - Ensure it remains connected to the table
@@ -34,3 +38,10 @@
 - Highlight the SQL code with pygments
 - Menu bar
     - Allow opening a new database
+
+## Filtering
+
+- Fix filtering
+    - When the user begins filtering, the horizontal scroll is lost and the table is not displayed correctly.
+- Get Schema to clipboard command
+    - Keybidning

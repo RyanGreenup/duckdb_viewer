@@ -169,7 +169,7 @@ class MainWindow(QMainWindow):
     def load_table_or_view(self, name: str, focus_column: Optional[str] = None) -> None:
         self.table_model = DuckDBTableModel(self.con, name)
         self.table_widget.set_model(self.table_model)
-        
+
         # Clear existing filter inputs
         self.table_widget.clear_filters()
         self.filter_inputs = []
@@ -178,7 +178,7 @@ class MainWindow(QMainWindow):
         for col in range(self.table_model.columnCount()):
             column_name = self.table_model.headerData(col, Qt.Orientation.Horizontal)
             line_edit = self.table_widget.add_filter_input(col, f"Filter {column_name}")
-            
+
             if line_edit:
                 line_edit.textChanged.connect(
                     lambda text, column=col: self.apply_filter(text, column)

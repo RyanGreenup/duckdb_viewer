@@ -64,7 +64,7 @@ class CustomLineEditStyle(QProxyStyle):
             painter.save()
             painter.setPen(QColor("#ccc"))
             painter.setBrush(QColor("#f8f8f8"))
-            painter.drawRect(option.rect().adjusted(0, 0, -1, -1))
+            painter.drawRect(option.rect().adjusted(0, 0, -1, -1))  # type: ignore [fn_rect]
             painter.restore()
         else:
             super().drawPrimitive(element, option, painter, widget)
@@ -230,3 +230,7 @@ class TableWidget(QWidget):
         )
         self.table_view.setModel(error_model)
         self.setup_header_widgets(error_model)
+
+# Footnotes
+# [fn_rect]: This is valid, it's a but in PySide6 linting, see
+#            <https://forum.qt.io/topic/159840/qstyleoptionviewitem-rect/9>
