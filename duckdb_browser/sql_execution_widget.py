@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from utils_get_schema import get_complete_schema
 from PySide6.QtGui import QKeySequence, QShortcut, QTextDocument
-from PySide6.QtCore import Qt, QStringListModel
+from PySide6.QtCore import QStringListModel
 from PySide6.QtCore import QAbstractItemModel
 from plotting_widget import PlottingWidget
 import pandas as pd
@@ -295,8 +295,14 @@ class SQLExecutionWidget(QWidget):
             # Update plot with new data
             if model.rowCount() > 0 and model.columnCount() >= 2:
                 data = {
-                    model.headerData(0, Qt.Orientation.Horizontal): [model.data(model.index(row, 0)) for row in range(model.rowCount())],
-                    model.headerData(1, Qt.Orientation.Horizontal): [model.data(model.index(row, 1)) for row in range(model.rowCount())]
+                    model.headerData(0, Qt.Orientation.Horizontal): [
+                        model.data(model.index(row, 0))
+                        for row in range(model.rowCount())
+                    ],
+                    model.headerData(1, Qt.Orientation.Horizontal): [
+                        model.data(model.index(row, 1))
+                        for row in range(model.rowCount())
+                    ],
                 }
                 df = pd.DataFrame(data)
                 self.plotting_widget.plot_data(df)
