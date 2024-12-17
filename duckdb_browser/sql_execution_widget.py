@@ -92,7 +92,7 @@ class SQLTextEdit(QTextEdit):
 
     def keyPressEvent(self, event):
         if self.completer.popup().isVisible():
-            if event.key() in (Qt.Key_Enter, Qt.Key_Return, Qt.Key_Tab, Qt.Key_Space):
+            if event.key() in (Qt.Key_Enter, Qt.Key_Return, Qt.Key_Tab):
                 event.ignore()
                 return
             elif event.key() == Qt.Key_N and event.modifiers() & Qt.ControlModifier:
