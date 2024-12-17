@@ -27,6 +27,7 @@ class PlottingWidget(QWidget):
         combo_layout.addWidget(QLabel("Y-axis:"))
         combo_layout.addWidget(self.y_combo)
         combo_layout.addWidget(self.update_button)
+        self.update_button.hide()  # Hide the update button as it's no longer needed
         self._layout.addLayout(combo_layout)
         
         self.figure: Figure = Figure(figsize=(5, 4), dpi=100)
@@ -36,8 +37,11 @@ class PlottingWidget(QWidget):
         # Set Seaborn style
         sns.set_theme(style="whitegrid")
         
-        # Connect update button to plot_data method
+        # Connect update button and combo boxes to update_plot method
         self.update_button.clicked.connect(self.update_plot)
+        self.x_combo.currentIndexChanged.connect(self.update_plot)
+        self.y_combo.currentIndexChanged.connect(self.update_plot)
+        self.plot_type_combo.currentIndexChanged.connect(self.update_plot)
         
         self.data: Optional[pd.DataFrame] = None
 
