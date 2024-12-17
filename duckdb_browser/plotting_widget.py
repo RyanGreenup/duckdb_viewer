@@ -5,15 +5,26 @@ from PySide6.QtWidgets import (
     QComboBox,
     QLabel,
     QSizePolicy,
-    QToolTip,
 )
 from PySide6.QtCore import Qt, QPointF
-from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet, QValueAxis, QBoxPlotSeries, QBoxSet, QBarCategoryAxis
-from PySide6.QtGui import QPainter, QColor, QFont
+from PySide6.QtCharts import (
+    QChart,
+    QChartView,
+    QLineSeries,
+    QScatterSeries,
+    QBarSeries,
+    QBarSet,
+    QValueAxis,
+    QBoxPlotSeries,
+    QBoxSet,
+    QBarCategoryAxis,
+)
+from PySide6.QtGui import QPainter, QColor
 import pandas as pd
 import numpy as np
 from typing import Optional, List, Tuple
 from enum import Enum, auto
+
 
 class CustomToolTip(QWidget):
     def __init__(self, parent=None):
@@ -40,12 +51,14 @@ class CustomToolTip(QWidget):
         super().show()
         self.move(pos)
 
+
 class PlotType(Enum):
     SCATTER = auto()
     LINE = auto()
     BAR = auto()
     HISTOGRAM = auto()
     BOX_PLOT = auto()
+
 
 class PlottingWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
@@ -57,7 +70,9 @@ class PlottingWidget(QWidget):
         self.y_combo = QComboBox()
         self.color_combo = QComboBox()
         self.plot_type_combo = QComboBox()
-        self.plot_type_combo.addItems([plot_type.name.capitalize().replace('_', ' ') for plot_type in PlotType])
+        self.plot_type_combo.addItems(
+            [plot_type.name.capitalize().replace("_", " ") for plot_type in PlotType]
+        )
 
         # Create custom tooltip
         self.tooltip = CustomToolTip(self)
@@ -148,13 +163,15 @@ class PlottingWidget(QWidget):
             self.plot_data(x_col, y_col)
 
     def plot_data(self, x_col: str, y_col: str) -> None:
-        if self.data is None or x_col == '' or y_col == '':
+        if self.data is None or x_col == "" or y_col == "":
             return
 
         self.chart.removeAllSeries()
         self.chart.createDefaultAxes()
 
-        plot_type = PlotType[self.plot_type_combo.currentText().upper().replace(' ', '_')]
+        plot_type = PlotType[
+            self.plot_type_combo.currentText().upper().replace(" ", "_")
+        ]
         color_col = self.color_combo.currentText()
 
         # Convert data to numeric or categorical for plotting
@@ -162,9 +179,16 @@ class PlottingWidget(QWidget):
         y_data, y_categories = self._convert_to_numeric_or_categorical(self.data[y_col])
 
         # Create valid_data DataFrame with original data
-        valid_data = pd.DataFrame({'x': self.data[x_col], 'y': self.data[y_col], 'x_plot': x_data, 'y_plot': y_data})
+        valid_data = pd.DataFrame(
+            {
+                "x": self.data[x_col],
+                "y": self.data[y_col],
+                "x_plot": x_data,
+                "y_plot": y_data,
+            }
+        )
         if color_col != "None":
-            valid_data['color'] = self.data[color_col]
+            valid_data["color"] = self.data[color_col]
         valid_data = valid_data.dropna()
 
         # Handle empty color column
@@ -172,7 +196,7 @@ class PlottingWidget(QWidget):
             color_col = None
         elif color_col not in valid_data.columns:
             color_col = None
-        elif valid_data['color'].empty:
+        elif valid_data["color"].empty:
             color_col = None
 
         match plot_type:
@@ -192,7 +216,17 @@ class PlottingWidget(QWidget):
         x_axis = self.chart.axes(Qt.Horizontal)[0]
         y_axis = self.chart.axes(Qt.Vertical)[0]
 
-        self._set_axis_labels(x_axis, y_axis, plot_type, x_col, y_col, valid_data, color_col, x_categories, y_categories)
+        self._set_axis_labels(
+            x_axis,
+            y_axis,
+            plot_type,
+            x_col,
+            y_col,
+            valid_data,
+            color_col,
+            x_categories,
+            y_categories,
+        )
 
         if color_col:
             self.chart.legend().show()
@@ -201,51 +235,63 @@ class PlottingWidget(QWidget):
 
         self.chart_view.update()
 
-    def _convert_to_numeric_or_categorical(self, data: pd.Series) -> Tuple[pd.Series, Optional[List[str]]]:
-        if data.dtype == 'object':
+    def _convert_to_numeric_or_categorical(
+        self, data: pd.Series
+    ) -> Tuple[pd.Series, Optional[List[str]]]:
+        if data.dtype == "object":
             categories = data.unique().tolist()
             return pd.Categorical(data).codes, categories
         else:
-            return pd.to_numeric(data, errors='coerce'), None
+            return pd.to_numeric(data, errors="coerce"), None
 
     def _plot_scatter(self, valid_data: pd.DataFrame, color_col: Optional[str]) -> None:
         if color_col:
-            unique_colors = valid_data['color'].unique()
+            unique_colors = valid_data["color"].unique()
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
                 series = QScatterSeries()
                 series.setName(f"{color_col}: {color}")
                 series.setColor(color_map[color])
-                color_data = valid_data[valid_data['color'] == color]
-                for y, x, y_plot, x_plot in zip(color_data['y'], color_data['x'], color_data['y_plot'], color_data['x_plot']):
+                color_data = valid_data[valid_data["color"] == color]
+                for y, x, y_plot, x_plot in zip(
+                    color_data["y"],
+                    color_data["x"],
+                    color_data["y_plot"],
+                    color_data["x_plot"],
+                ):
                     point = series.append(float(x_plot), float(y_plot))
                 series.hovered.connect(self._show_tooltip)
                 self.chart.addSeries(series)
         else:
             series = QScatterSeries()
             series.setName("Data")
-            for y, x, y_plot, x_plot in zip(valid_data['y'], valid_data['x'], valid_data['y_plot'], valid_data['x_plot']):
+            for y, x, y_plot, x_plot in zip(
+                valid_data["y"],
+                valid_data["x"],
+                valid_data["y_plot"],
+                valid_data["x_plot"],
+            ):
                 point = series.append(float(x_plot), float(y_plot))
             series.hovered.connect(self._show_tooltip)
             self.chart.addSeries(series)
 
     def _plot_line(self, valid_data: pd.DataFrame, color_col: Optional[str]) -> None:
         if color_col:
-            unique_colors = valid_data['color'].unique()
+            unique_colors = valid_data["color"].unique()
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
                 series = QLineSeries()
                 series.setName(f"{color_col}: {color}")
                 series.setColor(color_map[color])
-                color_data = valid_data[valid_data['color'] == color]
-                for y_plot, x_plot in zip(color_data['y_plot'], color_data['x_plot']):
+                color_data = valid_data[valid_data["color"] == color]
+                for y_plot, x_plot in zip(color_data["y_plot"], color_data["x_plot"]):
                     point = series.append(float(x_plot), float(y_plot))
                 series.hovered.connect(self._show_tooltip)
                 self.chart.addSeries(series)
         else:
             series = QLineSeries()
             series.setName("Data")
-            for y_plot, x_plot in zip(valid_data['y_plot'], valid_data['x_plot']):
+            for y_plot, x_plot in zip(valid_data["y_plot"], valid_data["x_plot"]):
                 point = series.append(float(x_plot), float(y_plot))
             series.hovered.connect(self._show_tooltip)
             self.chart.addSeries(series)
@@ -253,19 +299,19 @@ class PlottingWidget(QWidget):
     def _plot_bar(self, valid_data: pd.DataFrame, color_col: str, x_col: str) -> None:
         series = QBarSeries()
         if color_col != "None":
-            unique_colors = valid_data['color'].unique()
+            unique_colors = valid_data["color"].unique()
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
                 bar_set = QBarSet(str(color))
                 bar_set.setColor(color_map[color])
-                color_data = valid_data[valid_data['color'] == color]
-                for x, x_plot in zip(color_data['x'], color_data['x_plot']):
+                color_data = valid_data[valid_data["color"] == color]
+                for x, x_plot in zip(color_data["x"], color_data["x_plot"]):
                     bar_set.append(float(x_plot))
                     bar_set.setLabel(str(x))
                 series.append(bar_set)
         else:
             bar_set = QBarSet(str(x_col))
-            for x, x_plot in zip(valid_data['x'], valid_data['x_plot']):
+            for x, x_plot in zip(valid_data["x"], valid_data["x_plot"]):
                 bar_set.append(float(x_plot))
                 bar_set.setLabel(str(x))
             series.append(bar_set)
@@ -274,20 +320,22 @@ class PlottingWidget(QWidget):
     def _plot_histogram(self, valid_data: pd.DataFrame, color_col: str) -> None:
         series = QBarSeries()
         if color_col != "None":
-            unique_colors = valid_data['color'].unique()
+            unique_colors = valid_data["color"].unique()
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
                 bar_set = QBarSet(str(color))
                 bar_set.setColor(color_map[color])
-                color_data = valid_data[valid_data['color'] == color]
-                hist, bin_edges = np.histogram(color_data['y_plot'], bins='auto')
-                for count, bin_start, bin_end in zip(hist, bin_edges[:-1], bin_edges[1:]):
+                color_data = valid_data[valid_data["color"] == color]
+                hist, bin_edges = np.histogram(color_data["y_plot"], bins="auto")
+                for count, bin_start, bin_end in zip(
+                    hist, bin_edges[:-1], bin_edges[1:]
+                ):
                     bar_set.append(float(count))
                     bar_set.setLabel(f"{bin_start:.2f}-{bin_end:.2f}")
                 series.append(bar_set)
         else:
             bar_set = QBarSet("Frequency")
-            hist, bin_edges = np.histogram(valid_data['y_plot'], bins='auto')
+            hist, bin_edges = np.histogram(valid_data["y_plot"], bins="auto")
             for count, bin_start, bin_end in zip(hist, bin_edges[:-1], bin_edges[1:]):
                 bar_set.append(float(count))
                 bar_set.setLabel(f"{bin_start:.2f}-{bin_end:.2f}")
@@ -296,11 +344,11 @@ class PlottingWidget(QWidget):
 
     def _plot_box(self, valid_data: pd.DataFrame, color_col: str, x_col: str) -> None:
         if color_col != "None":
-            unique_colors = valid_data['color'].unique()
+            unique_colors = valid_data["color"].unique()
             color_map = self._get_color_map(unique_colors)
             series = QBoxPlotSeries()
             for color in unique_colors:
-                color_data = valid_data[valid_data['color'] == color]['x_plot']
+                color_data = valid_data[valid_data["color"] == color]["x_plot"]
                 box_set = self._create_box_set(color_data)
                 box_set.setLabel(str(color))
                 box_set.setBrush(color_map[color])
@@ -308,7 +356,7 @@ class PlottingWidget(QWidget):
             self.chart.addSeries(series)
         else:
             series = QBoxPlotSeries()
-            box_set = self._create_box_set(valid_data['x_plot'])
+            box_set = self._create_box_set(valid_data["x_plot"])
             series.append(box_set)
             self.chart.addSeries(series)
 
@@ -322,9 +370,25 @@ class PlottingWidget(QWidget):
         return QBoxSet(lower_bound, q1, median, q3, upper_bound)
 
     def _get_color_map(self, unique_colors):
-        return {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
+        return {
+            color: QColor(
+                hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256
+            )
+            for color in unique_colors
+        }
 
-    def _set_axis_labels(self, x_axis, y_axis, plot_type, x_col, y_col, valid_data, color_col, x_categories, y_categories):
+    def _set_axis_labels(
+        self,
+        x_axis,
+        y_axis,
+        plot_type,
+        x_col,
+        y_col,
+        valid_data,
+        color_col,
+        x_categories,
+        y_categories,
+    ):
         if x_axis is None or y_axis is None:
             return
 
@@ -334,18 +398,21 @@ class PlottingWidget(QWidget):
         if plot_type == PlotType.HISTOGRAM:
             x_axis.setTitleText("Bins")
             y_axis.setTitleText("Frequency")
-            _, bin_edges = np.histogram(valid_data['x'], bins='auto')
-            categories = [f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}" for i in range(len(bin_edges)-1)]
+            _, bin_edges = np.histogram(valid_data["x"], bins="auto")
+            categories = [
+                f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}"
+                for i in range(len(bin_edges) - 1)
+            ]
             self._set_categories(x_axis, categories)
         elif plot_type == PlotType.BOX_PLOT:
             x_axis.setTitleText(str(y_col))
             y_axis.setTitleText("Value")
             if color_col:
-                self._set_categories(x_axis, valid_data['color'].unique())
+                self._set_categories(x_axis, valid_data["color"].unique())
             else:
                 x_axis.setLabelsVisible(False)
         elif plot_type == PlotType.BAR:
-            categories = [str(x) for x in valid_data['x']]
+            categories = [str(x) for x in valid_data["x"]]
             self._set_categories(x_axis, categories)
         else:
             if x_categories:
@@ -373,6 +440,9 @@ class PlottingWidget(QWidget):
             x = self.chart.mapToValue(point).x()
             y = self.chart.mapToValue(point).y()
             tooltip_text = f"X: {x:.2f}<br>Y: {y:.2f}"
-            self.tooltip.show_tooltip(tooltip_text, self.chart_view.mapToGlobal(self.chart.mapToPosition(point).toPoint()))
+            self.tooltip.show_tooltip(
+                tooltip_text,
+                self.chart_view.mapToGlobal(self.chart.mapToPosition(point).toPoint()),
+            )
         else:
             self.tooltip.hide()
