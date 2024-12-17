@@ -21,28 +21,28 @@ class DuckDBTableModel(QAbstractTableModel):
         query = f"SELECT * FROM {self.table_name}"
         return self.connection.execute(query).df()
 
-    def rowCount(self, parent=QModelIndex()):
+    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
         return len(self.data)
 
-    def columnCount(self, parent=QModelIndex()):
+    def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:
         return len(self.headers)
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.DisplayRole) -> Optional[str]:
         if role == Qt.DisplayRole:
             return str(self.data.iloc[index.row(), index.column()])
         return None
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
+    def headerData(self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = Qt.DisplayRole) -> Optional[str]:
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self.headers[section]
         return None
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index: QModelIndex, value: any, role: Qt.ItemDataRole = Qt.EditRole) -> bool:
         if role == Qt.EditRole:
             row = index.row()
             col = index.column()
             column_name = self.headers[col]
-            old_value = self.data.iloc[row, col]
+            # old_value = self.data.iloc[row, col]  # Removed unused variable
             self.data.iloc[row, col] = value
 
             # Update the database
@@ -57,7 +57,7 @@ class DuckDBTableModel(QAbstractTableModel):
             return True
         return False
 
-    def flags(self, index):
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
 
 
