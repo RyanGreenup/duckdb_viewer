@@ -115,6 +115,7 @@ class PlottingWidget(QWidget):
         self.chart = QChart()
         self.chart_view = QChartView(self.chart)
         self.chart_view.setRenderHint(QPainter.Antialiasing)
+        self.chart_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self._layout.addWidget(self.chart_view)
 
         # Connect combo boxes to update_plot method
@@ -355,6 +356,9 @@ class PlottingWidget(QWidget):
         # Rotate x-axis labels by 45 degrees
         if isinstance(x_axis, QBarCategoryAxis):
             x_axis.setLabelsAngle(-45)
+
+        # Add gap at the bottom for x-axis labels
+        self.chart.layout().setContentsMargins(0, 0, 0, 40)
 
     def _set_categories(self, axis, categories):
         if isinstance(axis, QValueAxis):
