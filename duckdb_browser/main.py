@@ -449,10 +449,30 @@ class MainWindow(QMainWindow):
 
         # Adjust column widths
         header = self.table_widget.table_view.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        
+        # Set minimum width for each column
+        for col in range(self.table_model.columnCount()):
+            width = self.calculate_column_width(col)
+            self.table_widget.table_view.setColumnWidth(col, width)
+
+        # Enable horizontal scrolling
+        self.table_widget.table_view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
 
         # Update the main layout
         self.table_widget.get_main_layout().update()
+
+    def calculate_column_width(self, column: int) -> int:
+        font_metrics = self.table_widget.table_view.fontMetrics()
+        header_width = font_metrics.horizontalAdvance(self.table_model.headerData(column, Qt.Orientation.Horizontal)) + 20
+
+        max_content_width = header_width
+        for row in range(min(10, self.table_model.rowCount())):  # Check first 10 rows
+            index = self.table_model.index(row, column)
+            content_width = font_metrics.horizontalAdvance(str(self.table_model.data(index))) + 20
+            max_content_width = max(max_content_width, content_width)
+
+        return min(max_content_width, 300)  # Cap width at 300 pixels
 
     def adjust_column_width(self, index: QModelIndex) -> None:
         self.sidebar.resizeColumnToContents(0)
