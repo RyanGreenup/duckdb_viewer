@@ -62,13 +62,16 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
         return text_format
 
     def highlightBlock(self, text: str) -> None:
+        block_start = self.currentBlock().position()
+        current_position = 0
         for token, value in lex(text, self.lexer):
             token_str = str(token)
             style_key = token_str.split('.')[-1]
             if style_key in self.styles:
-                start = self.currentBlock().position()
+                start = block_start + current_position
                 length = len(value)
                 self.setFormat(start, length, self.styles[style_key])
+            current_position += len(value)
 
 
 class SQLCompleter(QCompleter):
