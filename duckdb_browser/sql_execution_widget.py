@@ -230,7 +230,7 @@ class SQLExecutionWidget(QWidget):
         query = self.text_edit.toPlainText()
         self.execute_sql(query)
 
-    def update_completions(self):
+    def update_completions(self) -> None:
         table_names = self.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table'"
         ).fetchall()
