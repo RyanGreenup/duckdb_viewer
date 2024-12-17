@@ -55,9 +55,6 @@ class TableWidget(QWidget):
             self.header_widgets.append(widget)
             header.setSectionResizeMode(col, QHeaderView.Stretch)
             self.table_view.setIndexWidget(model.index(0, col), widget)
-        
-        # Add an empty row at the top for our custom header
-        model.insertRow(0)
 
     def clear_filters(self) -> None:
         for widget in self.header_widgets:

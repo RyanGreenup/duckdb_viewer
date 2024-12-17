@@ -59,7 +59,6 @@ class DuckDBTableModel(QAbstractTableModel):
         self._filters = [""] * len(self.headers)
 
     def set_filter(self, column: int, filter_text: str) -> None:
-        # Existing implementation
         self.layoutAboutToBeChanged.emit()
         self._filters[column] = filter_text.lower()
         self._apply_filters()
@@ -96,7 +95,7 @@ class DuckDBTableModel(QAbstractTableModel):
     def rowCount(
         self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
     ) -> int:
-        return len(self._filtered_data)
+        return len(self._filtered_data) + 1  # +1 for the header row
 
     def columnCount(
         self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
@@ -108,8 +107,10 @@ class DuckDBTableModel(QAbstractTableModel):
         index: Union[QModelIndex, QPersistentModelIndex],
         role: int = Qt.ItemDataRole.DisplayRole,
     ) -> Any:
+        if not index.isValid() or index.row() == 0:  # Header row
+            return None
         if role == Qt.ItemDataRole.DisplayRole:
-            return str(self._filtered_data[index.row()][index.column()])
+            return str(self._filtered_data[index.row() - 1][index.column()])
         return None
 
     def headerData(
@@ -131,10 +132,10 @@ class DuckDBTableModel(QAbstractTableModel):
         value: Any,
         role: int = Qt.ItemDataRole.EditRole,
     ) -> bool:
-        if role == Qt.ItemDataRole.EditRole:
-            row = index.row()
+        if role == Qt.ItemDataRole.EditRole and index.row() > 0:
+            row = index.row() - 1
             col = index.column()
-            column_name = self.headers[col]
+            column_name = self.headers[col][0]
             self._data[row][col] = value
 
             # Update the database
@@ -150,6 +151,8 @@ class DuckDBTableModel(QAbstractTableModel):
         return False
 
     def flags(self, index: Union[QModelIndex, QPersistentModelIndex]) -> Qt.ItemFlag:
+        if index.row() == 0:  # Header row
+            return Qt.ItemFlag.ItemIsEnabled
         return (
             Qt.ItemFlag.ItemIsEnabled
             | Qt.ItemFlag.ItemIsSelectable
