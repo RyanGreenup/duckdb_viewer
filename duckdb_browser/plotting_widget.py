@@ -226,6 +226,8 @@ class PlottingWidget(QWidget):
         else:
             color_col = str(color_col)
 
+        color_col_str: Optional[str] = color_col
+
         match plot_type:
             case PlotType.SCATTER:
                 self._plot_scatter(valid_data, color_col)
@@ -267,7 +269,7 @@ class PlottingWidget(QWidget):
     ) -> NumericOrCategoricalResult:
         if data.dtype == "object":
             categories = data.unique().tolist()
-            return pd.Series(pd.Categorical(data).codes, dtype=int), categories  # type: ignore
+            return pd.Series(pd.Categorical(data).codes, dtype=int), categories
         else:
             return pd.to_numeric(data, errors="coerce"), None
 
@@ -393,7 +395,7 @@ class PlottingWidget(QWidget):
             series.append(box_set)
             self.chart.addSeries(series)
 
-    def _create_box_set(self, data: Series) -> QBoxSet:
+    def _create_box_set(self, data: Series[Union[int, float]]) -> QBoxSet:
         q1 = float(np.percentile(data, 25))
         median = float(np.median(data))
         q3 = float(np.percentile(data, 75))
