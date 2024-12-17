@@ -218,26 +218,25 @@ class PlottingWidget(QWidget):
         valid_data = valid_data.dropna()
 
         # Handle empty color column
+        color_col_opt: Optional[str] = None
         if (
-            color_col == "None"
-            or color_col not in valid_data.columns
-            or valid_data["color"].empty
+            color_col != "None"
+            and color_col in valid_data.columns
+            and not valid_data["color"].empty
         ):
-            color_col = None
-        else:
-            color_col = str(color_col)
+            color_col_opt = str(color_col)
 
         match plot_type:
             case PlotType.SCATTER:
-                self._plot_scatter(valid_data, color_col)
+                self._plot_scatter(valid_data, color_col_opt)
             case PlotType.LINE:
-                self._plot_line(valid_data, color_col)
+                self._plot_line(valid_data, color_col_opt)
             case PlotType.BAR:
-                self._plot_bar(valid_data, color_col, x_col)
+                self._plot_bar(valid_data, color_col_opt, x_col)
             case PlotType.HISTOGRAM:
-                self._plot_histogram(valid_data, color_col)
+                self._plot_histogram(valid_data, color_col_opt)
             case PlotType.BOX_PLOT:
-                self._plot_box(valid_data, color_col, x_col)
+                self._plot_box(valid_data, color_col_opt, x_col)
 
         self.chart.setTitle(f"{plot_type.name.capitalize().replace('_', ' ')}: {y_col}")
         self.chart.createDefaultAxes()
@@ -251,12 +250,12 @@ class PlottingWidget(QWidget):
             x_col,
             y_col,
             valid_data,
-            color_col,
+            color_col_opt,
             x_categories,
             y_categories,
         )
 
-        if color_col:
+        if color_col_opt:
             self.chart.legend().show()
         else:
             self.chart.legend().hide()
@@ -394,7 +393,7 @@ class PlottingWidget(QWidget):
             series.append(box_set)
             self.chart.addSeries(series)
 
-    def _create_box_set(self, data: Series[Union[int, float]]) -> QBoxSet:
+    def _create_box_set(self, data: Series[Union[int, float, Any]]) -> QBoxSet:
         q1 = float(np.percentile(data, 25))
         median = float(np.median(data))
         q3 = float(np.percentile(data, 75))
