@@ -127,12 +127,12 @@ class PlottingWidget(QWidget):
         plot_type = PlotType[self.plot_type_combo.currentText().upper().replace(' ', '_')]
         color_col = self.color_combo.currentText()
 
-        # Convert data to numeric or categorical
+        # Convert data to numeric or categorical for plotting
         x_data, x_categories = self._convert_to_numeric_or_categorical(self.data[x_col])
         y_data, y_categories = self._convert_to_numeric_or_categorical(self.data[y_col])
 
-        # Remove NaN values
-        valid_data = pd.DataFrame({'x': x_data, 'y': y_data})
+        # Create valid_data DataFrame with original data
+        valid_data = pd.DataFrame({'x': self.data[x_col], 'y': self.data[y_col], 'x_plot': x_data, 'y_plot': y_data})
         if color_col != "None":
             valid_data['color'] = self.data[color_col]
         valid_data = valid_data.dropna()
@@ -143,11 +143,11 @@ class PlottingWidget(QWidget):
             case PlotType.LINE:
                 self._plot_line(valid_data, color_col)
             case PlotType.BAR:
-                self._plot_bar(valid_data, color_col, y_col)
+                self._plot_bar(valid_data, color_col, x_col)
             case PlotType.HISTOGRAM:
                 self._plot_histogram(valid_data, color_col)
             case PlotType.BOX_PLOT:
-                self._plot_box(valid_data, color_col, y_col)
+                self._plot_box(valid_data, color_col, x_col)
 
         self.chart.setTitle(f"{plot_type.name.capitalize().replace('_', ' ')}: {y_col}")
         self.chart.createDefaultAxes()
@@ -174,13 +174,15 @@ class PlottingWidget(QWidget):
                 series.setName(str(color))
                 series.setColor(color_map[color])
                 color_data = valid_data[valid_data['color'] == color]
-                for y, x in zip(color_data['y'], color_data['x']):
-                    series.append(float(x), float(y))
+                for y, x, y_plot, x_plot in zip(color_data['y'], color_data['x'], color_data['y_plot'], color_data['x_plot']):
+                    point = series.append(float(x_plot), float(y_plot))
+                    series.setPointLabel(f"({x}, {y})")
                 self.chart.addSeries(series)
         else:
             series = QScatterSeries()
-            for y, x in zip(valid_data['y'], valid_data['x']):
-                series.append(float(x), float(y))
+            for y, x, y_plot, x_plot in zip(valid_data['y'], valid_data['x'], valid_data['y_plot'], valid_data['x_plot']):
+                point = series.append(float(x_plot), float(y_plot))
+                series.setPointLabel(f"({x}, {y})")
             self.chart.addSeries(series)
 
     def _plot_line(self, valid_data: pd.DataFrame, color_col: str) -> None:
@@ -192,13 +194,15 @@ class PlottingWidget(QWidget):
                 series.setName(str(color))
                 series.setColor(color_map[color])
                 color_data = valid_data[valid_data['color'] == color]
-                for y, x in zip(color_data['y'], color_data['x']):
-                    series.append(float(x), float(y))
+                for y, x, y_plot, x_plot in zip(color_data['y'], color_data['x'], color_data['y_plot'], color_data['x_plot']):
+                    point = series.append(float(x_plot), float(y_plot))
+                    series.setPointLabel(f"({x}, {y})")
                 self.chart.addSeries(series)
         else:
             series = QLineSeries()
-            for y, x in zip(valid_data['y'], valid_data['x']):
-                series.append(float(x), float(y))
+            for y, x, y_plot, x_plot in zip(valid_data['y'], valid_data['x'], valid_data['y_plot'], valid_data['x_plot']):
+                point = series.append(float(x_plot), float(y_plot))
+                series.setPointLabel(f"({x}, {y})")
             self.chart.addSeries(series)
 
     def _plot_bar(self, valid_data: pd.DataFrame, color_col: str, x_col: str) -> None:
@@ -210,13 +214,15 @@ class PlottingWidget(QWidget):
                 bar_set = QBarSet(str(color))
                 bar_set.setColor(color_map[color])
                 color_data = valid_data[valid_data['color'] == color]
-                for x in color_data['x']:
-                    bar_set.append(float(x))
+                for x, x_plot in zip(color_data['x'], color_data['x_plot']):
+                    bar_set.append(float(x_plot))
+                    bar_set.setLabel(str(x))
                 series.append(bar_set)
         else:
             bar_set = QBarSet(str(x_col))
-            for x in valid_data['x']:
-                bar_set.append(float(x))
+            for x, x_plot in zip(valid_data['x'], valid_data['x_plot']):
+                bar_set.append(float(x_plot))
+                bar_set.setLabel(str(x))
             series.append(bar_set)
         self.chart.addSeries(series)
 
@@ -229,15 +235,17 @@ class PlottingWidget(QWidget):
                 bar_set = QBarSet(str(color))
                 bar_set.setColor(color_map[color])
                 color_data = valid_data[valid_data['color'] == color]
-                hist, _ = np.histogram(color_data['y'], bins='auto')
-                for count in hist:
+                hist, bin_edges = np.histogram(color_data['y_plot'], bins='auto')
+                for count, bin_start, bin_end in zip(hist, bin_edges[:-1], bin_edges[1:]):
                     bar_set.append(float(count))
+                    bar_set.setLabel(f"{bin_start:.2f}-{bin_end:.2f}")
                 series.append(bar_set)
         else:
             bar_set = QBarSet("Frequency")
-            hist, _ = np.histogram(valid_data['y'], bins='auto')
-            for count in hist:
+            hist, bin_edges = np.histogram(valid_data['y_plot'], bins='auto')
+            for count, bin_start, bin_end in zip(hist, bin_edges[:-1], bin_edges[1:]):
                 bar_set.append(float(count))
+                bar_set.setLabel(f"{bin_start:.2f}-{bin_end:.2f}")
             series.append(bar_set)
         self.chart.addSeries(series)
 
@@ -247,7 +255,7 @@ class PlottingWidget(QWidget):
             color_map = self._get_color_map(unique_colors)
             series = QBoxPlotSeries()
             for color in unique_colors:
-                color_data = valid_data[valid_data['color'] == color]['x']
+                color_data = valid_data[valid_data['color'] == color]['x_plot']
                 box_set = self._create_box_set(color_data)
                 box_set.setLabel(str(color))
                 box_set.setBrush(color_map[color])
@@ -255,7 +263,7 @@ class PlottingWidget(QWidget):
             self.chart.addSeries(series)
         else:
             series = QBoxPlotSeries()
-            box_set = self._create_box_set(valid_data['x'])
+            box_set = self._create_box_set(valid_data['x_plot'])
             series.append(box_set)
             self.chart.addSeries(series)
 
