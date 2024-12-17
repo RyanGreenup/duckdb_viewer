@@ -425,11 +425,8 @@ class PlottingWidget(QWidget):
         if x_axis is None or y_axis is None:
             return
 
-        x_axis_cast = cast(ChartAxis, x_axis)
-        y_axis_cast = cast(ChartAxis, y_axis)
-
-        x_axis_cast.setTitleText(str(x_col))
-        y_axis_cast.setTitleText(str(y_col))
+        x_axis.setTitleText(str(x_col))
+        y_axis.setTitleText(str(y_col))
 
         if plot_type == PlotType.HISTOGRAM:
             x_axis.setTitleText("Bins")
@@ -444,7 +441,7 @@ class PlottingWidget(QWidget):
             x_axis.setTitleText(str(y_col))
             y_axis.setTitleText("Value")
             if color_col:
-                self._set_categories(x_axis, valid_data["color"].unique())
+                self._set_categories(x_axis, valid_data["color"].unique().tolist())
             else:
                 x_axis.setLabelsVisible(False)
         elif plot_type == PlotType.BAR:
@@ -463,14 +460,12 @@ class PlottingWidget(QWidget):
         # Add gap at the bottom for x-axis labels
         self.chart.layout().setContentsMargins(0, 0, 0, 40)
 
-    def _set_categories(
-        self, axis: Union[QValueAxis, QBarCategoryAxis], categories: List[str]
-    ) -> None:
+    def _set_categories(self, axis: QAbstractAxis, categories: List[str]) -> None:
         if isinstance(axis, QValueAxis):
             new_axis = QBarCategoryAxis()
             new_axis.append(categories)
             self.chart.setAxisX(new_axis, self.chart.series()[0])
-        else:
+        elif isinstance(axis, QBarCategoryAxis):
             axis.setCategories(categories)
 
     def _show_tooltip(self, point: QPointF, state: bool):
