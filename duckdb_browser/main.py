@@ -338,6 +338,10 @@ class MainWindow(QMainWindow):
         self.sidebar.clicked.connect(self.on_sidebar_clicked)
         self.sidebar.expanded.connect(self.adjust_column_width)
 
+        # Expand the "Tables" and "Views" items by default
+        self.sidebar.expand(self.sidebar_model.index(0, 0, QModelIndex()))
+        self.sidebar.expand(self.sidebar_model.index(1, 0, QModelIndex()))
+
         # Create and set up the table widget
         self.table_widget = TableWidget()
         self.table_widget.table_view.setSortingEnabled(True)
@@ -377,18 +381,21 @@ class MainWindow(QMainWindow):
             self.load_first_table()
 
     def find_table_index(self, table_name: str) -> QModelIndex:
-        for row in range(self.sidebar_model.rowCount()):
-            index = self.sidebar_model.index(row, 0)
-            if (
-                self.sidebar_model.data(index, Qt.ItemDataRole.DisplayRole)
-                == table_name
-            ):
-                return index
+        for category_row in range(self.sidebar_model.rowCount()):
+            category_index = self.sidebar_model.index(category_row, 0)
+            for row in range(self.sidebar_model.rowCount(category_index)):
+                index = self.sidebar_model.index(row, 0, category_index)
+                if (
+                    self.sidebar_model.data(index, Qt.ItemDataRole.DisplayRole)
+                    == table_name
+                ):
+                    return index
         return QModelIndex()
 
     def load_first_table(self) -> None:
-        if self.sidebar_model.rowCount() > 0:
-            first_table_index = self.sidebar_model.index(0, 0)
+        tables_index = self.sidebar_model.index(0, 0, QModelIndex())
+        if self.sidebar_model.rowCount(tables_index) > 0:
+            first_table_index = self.sidebar_model.index(0, 0, tables_index)
             self.on_sidebar_clicked(first_table_index)
 
     def on_sidebar_clicked(self, index: QModelIndex) -> None:
@@ -398,6 +405,7 @@ class MainWindow(QMainWindow):
             self.load_table_or_view(item_name)
         elif item_type == "column":
             self.load_table_or_view(item_name, focus_column=column_name)
+        # Ignore clicks on category items ("Tables" and "Views")
 
     def load_table_or_view(self, name: str, focus_column: Optional[str] = None) -> None:
         self.table_model = DuckDBTableModel(self.con, name)
