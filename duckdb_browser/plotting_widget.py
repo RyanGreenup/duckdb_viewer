@@ -6,7 +6,8 @@ import pandas as pd
 from typing import Optional, TypeVar
 from matplotlib.axes import Axes
 
-T = TypeVar('T', bound=FigureCanvas)
+T = TypeVar("T", bound=FigureCanvas)
+
 
 class PlottingWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
