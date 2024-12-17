@@ -137,6 +137,10 @@ class PlottingWidget(QWidget):
             valid_data['color'] = self.data[color_col]
         valid_data = valid_data.dropna()
 
+        # Handle empty color column
+        if color_col == "None" or valid_data['color'].empty:
+            color_col = None
+
         match plot_type:
             case PlotType.SCATTER:
                 self._plot_scatter(valid_data, color_col)
@@ -165,8 +169,8 @@ class PlottingWidget(QWidget):
         else:
             return pd.to_numeric(data, errors='coerce'), None
 
-    def _plot_scatter(self, valid_data: pd.DataFrame, color_col: str) -> None:
-        if color_col != "None":
+    def _plot_scatter(self, valid_data: pd.DataFrame, color_col: Optional[str]) -> None:
+        if color_col:
             unique_colors = valid_data['color'].unique()
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
@@ -176,17 +180,15 @@ class PlottingWidget(QWidget):
                 color_data = valid_data[valid_data['color'] == color]
                 for y, x, y_plot, x_plot in zip(color_data['y'], color_data['x'], color_data['y_plot'], color_data['x_plot']):
                     point = series.append(float(x_plot), float(y_plot))
-                    series.setPointLabel(f"({x}, {y})")
                 self.chart.addSeries(series)
         else:
             series = QScatterSeries()
             for y, x, y_plot, x_plot in zip(valid_data['y'], valid_data['x'], valid_data['y_plot'], valid_data['x_plot']):
                 point = series.append(float(x_plot), float(y_plot))
-                series.setPointLabel(f"({x}, {y})")
             self.chart.addSeries(series)
 
-    def _plot_line(self, valid_data: pd.DataFrame, color_col: str) -> None:
-        if color_col != "None":
+    def _plot_line(self, valid_data: pd.DataFrame, color_col: Optional[str]) -> None:
+        if color_col:
             unique_colors = valid_data['color'].unique()
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
@@ -194,15 +196,13 @@ class PlottingWidget(QWidget):
                 series.setName(str(color))
                 series.setColor(color_map[color])
                 color_data = valid_data[valid_data['color'] == color]
-                for y, x, y_plot, x_plot in zip(color_data['y'], color_data['x'], color_data['y_plot'], color_data['x_plot']):
+                for y_plot, x_plot in zip(color_data['y_plot'], color_data['x_plot']):
                     point = series.append(float(x_plot), float(y_plot))
-                    series.setPointLabel(f"({x}, {y})")
                 self.chart.addSeries(series)
         else:
             series = QLineSeries()
-            for y, x, y_plot, x_plot in zip(valid_data['y'], valid_data['x'], valid_data['y_plot'], valid_data['x_plot']):
+            for y_plot, x_plot in zip(valid_data['y_plot'], valid_data['x_plot']):
                 point = series.append(float(x_plot), float(y_plot))
-                series.setPointLabel(f"({x}, {y})")
             self.chart.addSeries(series)
 
     def _plot_bar(self, valid_data: pd.DataFrame, color_col: str, x_col: str) -> None:
