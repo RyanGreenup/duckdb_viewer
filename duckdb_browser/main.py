@@ -86,7 +86,9 @@ class DuckDBTableModel(QAbstractTableModel):
         self._data = df.values.tolist()
         self.headers = df.columns.tolist()
 
-    def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
+    def sort(
+        self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder
+    ) -> None:
         self._sort_column = column
         self._sort_order = order
         self._data.sort(
