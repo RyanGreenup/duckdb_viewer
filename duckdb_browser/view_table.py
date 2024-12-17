@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
     QHeaderView,
+    QLabel,
 )
 from PySide6.QtCore import (
     Qt,
@@ -14,81 +15,22 @@ from PySide6.QtCore import Qt as QtCore
 from typing import List, Optional
 
 
-class FilterHeader(QHeaderView):
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(Qt.Orientation.Horizontal, parent)
-        self.setSectionsClickable(True)
-        self.setSortIndicatorShown(True)
-        self.filter_widgets: List[QLineEdit] = []  # Initialize the filter_widgets list
-        self.setStretchLastSection(True)
-
-    def setFilterWidgets(self, count: int) -> None:
-        self.filter_widgets = [QLineEdit(self) for _ in range(count)]
-        for widget in self.filter_widgets:
-            widget.setParent(self)
-        self.adjustPositions()
-
-    def sizeHint(self) -> QSize:
-        size = super().sizeHint()
-        if self.filter_widgets:
-            size.setHeight(size.height() * 2)  # Double the height for header and filter
-        return size
-
-    def updateGeometries(self) -> None:
-        super().updateGeometries()
-        self.adjustPositions()
-
-    def adjustPositions(self) -> None:
-        if hasattr(self, "filter_widgets") and self.filter_widgets:
-            header_height = super().sizeHint().height()
-            for index, widget in enumerate(self.filter_widgets):
-                widget.setGeometry(
-                    self.sectionPosition(index),
-                    header_height,
-                    self.sectionSize(index),
-                    header_height,
-                )
-
-    def filterWidget(self, index: int) -> Optional[QLineEdit]:
-        if 0 <= index < len(self.filter_widgets):
-            return self.filter_widgets[index]
-        return None
-
-    def filterText(self, index: int) -> str:
-        if 0 <= index < len(self.filter_widgets):
-            return self.filter_widgets[index].text()
-        return ""
-
-    def clearFilters(self) -> None:
-        for widget in self.filter_widgets:
-            widget.clear()
-
-
-class CombinedHeaderWidget(QWidget):
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+class CustomHeaderWidget(QWidget):
+    def __init__(self, column_name: str, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.filter_header = FilterHeader(self)
-        self.filter_header.setFilterWidgets(
-            0
-        )  # Initialize with 0 columns, update later when model is set
-
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(self.filter_header)
+        layout.setSpacing(2)
+        
+        self.label = QLabel(column_name)
+        self.filter_input = QLineEdit()
+        self.filter_input.setPlaceholderText(f"Filter {column_name}")
+        
+        layout.addWidget(self.label)
+        layout.addWidget(self.filter_input)
 
-    def setModel(self, model: QAbstractItemModel) -> None:
-        self.filter_header.setModel(model)
-        self.filter_header.setFilterWidgets(model.columnCount())
-
-    def setFilterWidgets(self, count: int) -> None:
-        self.filter_header.setFilterWidgets(count)
-
-    def filterWidget(self, index: int) -> Optional[QLineEdit]:
-        return self.filter_header.filterWidget(index)
-
-    def clearFilters(self) -> None:
-        self.filter_header.clearFilters()
+    def get_filter_input(self) -> QLineEdit:
+        return self.filter_input
 
 
 class TableWidget(QWidget):
@@ -96,22 +38,37 @@ class TableWidget(QWidget):
         super().__init__(parent)
         self._main_layout = QVBoxLayout(self)
         self.table_view = QTableView(self)
-        self.combined_header = CombinedHeaderWidget(self.table_view)
-        self.table_view.setHorizontalHeader(self.combined_header.filter_header)
+        self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self._main_layout.addWidget(self.table_view)
+        self.header_widgets: List[CustomHeaderWidget] = []
 
     def set_model(self, model: QAbstractItemModel) -> None:
         self.table_view.setModel(model)
-        self.combined_header.setModel(model)
+        self.setup_header_widgets(model)
+
+    def setup_header_widgets(self, model: QAbstractItemModel) -> None:
+        header = self.table_view.horizontalHeader()
+        self.header_widgets = []
+        for col in range(model.columnCount()):
+            column_name = model.headerData(col, Qt.Orientation.Horizontal)
+            widget = CustomHeaderWidget(column_name)
+            self.header_widgets.append(widget)
+            header.setSectionResizeMode(col, QHeaderView.Stretch)
+            self.table_view.setIndexWidget(model.index(0, col), widget)
+        
+        # Add an empty row at the top for our custom header
+        model.insertRow(0)
 
     def clear_filters(self) -> None:
-        self.combined_header.clearFilters()
+        for widget in self.header_widgets:
+            widget.get_filter_input().clear()
 
     def add_filter_input(self, column: int, placeholder: str) -> Optional[QLineEdit]:
-        filter_widget = self.combined_header.filterWidget(column)
-        if filter_widget:
-            filter_widget.setPlaceholderText(placeholder)
-        return filter_widget
+        if 0 <= column < len(self.header_widgets):
+            filter_input = self.header_widgets[column].get_filter_input()
+            filter_input.setPlaceholderText(placeholder)
+            return filter_input
+        return None
 
     def get_main_layout(self) -> QVBoxLayout:
         return self._main_layout
@@ -124,4 +81,4 @@ class TableWidget(QWidget):
             error_model.index(0, 0), error_message, QtCore.ItemDataRole.DisplayRole
         )
         self.table_view.setModel(error_model)
-        self.combined_header.setFilterWidgets(1)
+        self.setup_header_widgets(error_model)
