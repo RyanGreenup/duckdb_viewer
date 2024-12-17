@@ -15,7 +15,6 @@ from PySide6.QtCore import (
     QAbstractTableModel,
     QModelIndex,
     QAbstractItemModel,
-    QObject,
 )
 import duckdb
 from duckdb import DuckDBPyConnection
