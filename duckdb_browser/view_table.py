@@ -15,30 +15,29 @@ from PySide6.QtCore import (
     Signal,
     QPoint,
 )
-from PySide6.QtGui import QFont, QColor, QPalette, QMouseEvent
+from PySide6.QtGui import QFont, QColor, QPalette, QMouseEvent, QCursor
 from PySide6.QtCore import Qt as QtCore
 from typing import List, Optional, Union
 
 # Custom types
-QtAlignment = Union[Qt.AlignmentFlag, Qt.Alignment]
-QtCursor = Union[Qt.CursorShape, Qt.Cursor]
+QtAlignment = Qt.AlignmentFlag
 
 
 class CustomHeaderView(QHeaderView):
     def __init__(self, orientation: Qt.Orientation, parent: Optional[QWidget] = None):
         super().__init__(orientation, parent)
-        self.setDefaultAlignment(QtAlignment(Qt.AlignLeft | Qt.AlignVCenter))
+        self.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.setSectionsClickable(True)
         self.setSectionsMovable(False)
         self.setStretchLastSection(True)
         self.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
 
     def mouseMoveEvent(self, e: QMouseEvent) -> None:
-        if self.cursor().shape() != QtCursor(Qt.SplitHCursor):
+        if self.cursor().shape() != Qt.CursorShape.SplitHCursor:
             if self.isOnSectionResizeArea(e.position().toPoint()):
-                self.setCursor(QtCursor(Qt.SplitHCursor))
+                self.setCursor(QCursor(Qt.CursorShape.SplitHCursor))
             else:
-                self.setCursor(QtCursor(Qt.ArrowCursor))
+                self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
         super().mouseMoveEvent(e)
 
     def isOnSectionResizeArea(self, pos: QPoint) -> bool:
