@@ -35,7 +35,8 @@ DataType = Union[int, float, str]
 ChartAxis = Union[QValueAxis, QBarCategoryAxis]
 
 # Custom type for the return value of _convert_to_numeric_or_categorical
-NumericOrCategoricalResult = Tuple[Series[Union[int, float]], Optional[List[Any]]]
+# TODO consider str instead of Any
+NumericOrCategoricalResult = Tuple[Series[Union[int, float]], Optional[List[str]]]
 
 # Custom type for color map
 ColorMap = Dict[Union[str, float], QColor]
