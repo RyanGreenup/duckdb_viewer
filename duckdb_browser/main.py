@@ -90,7 +90,9 @@ class DuckDBTableModel(QAbstractTableModel):
         self.layoutAboutToBeChanged.emit()
         self._sort_column = column
         self._sort_order = order
-        self._data.sort(key=lambda x: x[column], reverse=(order == Qt.SortOrder.DescendingOrder))
+        self._data.sort(
+            key=lambda x: x[column], reverse=(order == Qt.SortOrder.DescendingOrder)
+        )
         self.layoutChanged.emit()
 
     def rowCount(
