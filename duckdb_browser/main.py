@@ -155,7 +155,7 @@ class TableListModel(QAbstractItemModel):
         child_item: DatabaseItem = child.internalPointer()
         parent_item = child_item.parent
 
-        if parent_item == self.root:
+        if parent_item is None or parent_item == self.root:
             return QModelIndex()
 
         return self.createIndex(parent_item.row(), 0, parent_item)
