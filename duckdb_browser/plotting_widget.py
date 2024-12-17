@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet, QValueAxis, QBoxPlotSeries, QBoxSet
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QPainter, QColor
 import pandas as pd
 import numpy as np
 from typing import Optional, List
@@ -21,6 +21,7 @@ class PlottingWidget(QWidget):
         # Create combo boxes
         self.x_combo = QComboBox()
         self.y_combo = QComboBox()
+        self.color_combo = QComboBox()
         self.plot_type_combo = QComboBox()
         self.plot_type_combo.addItems(["Scatter", "Line", "Bar", "Histogram", "Box Plot"])
 
@@ -28,6 +29,7 @@ class PlottingWidget(QWidget):
         min_width = 150
         self.x_combo.setMinimumWidth(min_width)
         self.y_combo.setMinimumWidth(min_width)
+        self.color_combo.setMinimumWidth(min_width)
         self.plot_type_combo.setMinimumWidth(min_width)
 
         # Apply stylesheet for a more professional look
@@ -50,11 +52,13 @@ class PlottingWidget(QWidget):
         """
         self.x_combo.setStyleSheet(style)
         self.y_combo.setStyleSheet(style)
+        self.color_combo.setStyleSheet(style)
         self.plot_type_combo.setStyleSheet(style)
 
         # Set size policy to expand horizontally
         self.x_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.y_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.color_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.plot_type_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         combo_layout = QHBoxLayout()
@@ -64,6 +68,8 @@ class PlottingWidget(QWidget):
         combo_layout.addWidget(self.x_combo)
         combo_layout.addWidget(QLabel("Y-axis:"))
         combo_layout.addWidget(self.y_combo)
+        combo_layout.addWidget(QLabel("Color:"))
+        combo_layout.addWidget(self.color_combo)
         combo_layout.setAlignment(Qt.AlignTop)
         combo_layout.setSpacing(10)
         self._layout.addLayout(combo_layout)
@@ -77,6 +83,7 @@ class PlottingWidget(QWidget):
         # Connect combo boxes to update_plot method
         self.x_combo.currentIndexChanged.connect(self.update_plot)
         self.y_combo.currentIndexChanged.connect(self.update_plot)
+        self.color_combo.currentIndexChanged.connect(self.update_plot)
         self.plot_type_combo.currentIndexChanged.connect(self.update_plot)
 
         self.data: Optional[pd.DataFrame] = None
@@ -84,8 +91,10 @@ class PlottingWidget(QWidget):
     def set_columns(self, columns: List[str]) -> None:
         self.x_combo.clear()
         self.y_combo.clear()
+        self.color_combo.clear()
         self.x_combo.addItems(columns)
         self.y_combo.addItems(columns)
+        self.color_combo.addItems(["None"] + columns)
         if len(columns) > 1:
             self.y_combo.setCurrentIndex(1)
 
@@ -108,59 +117,119 @@ class PlottingWidget(QWidget):
         self.chart.createDefaultAxes()
 
         plot_type = self.plot_type_combo.currentText()
+        color_col = self.color_combo.currentText()
 
         # Convert data to numeric, replacing non-numeric values with NaN
         x_data = pd.to_numeric(self.data[x_col], errors='coerce')
         y_data = pd.to_numeric(self.data[y_col], errors='coerce')
 
         # Remove NaN values
-        valid_data = pd.DataFrame({'x': x_data, 'y': y_data}).dropna()
+        valid_data = pd.DataFrame({'x': x_data, 'y': y_data})
+        if color_col != "None":
+            valid_data['color'] = self.data[color_col]
+        valid_data = valid_data.dropna()
 
         if plot_type == "Scatter":
-            series = QScatterSeries()
-            for x, y in zip(valid_data['x'], valid_data['y']):
-                series.append(float(x), float(y))
-            self.chart.addSeries(series)
+            if color_col != "None":
+                unique_colors = valid_data['color'].unique()
+                color_map = {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
+                for color in unique_colors:
+                    series = QScatterSeries()
+                    series.setName(str(color))
+                    series.setColor(color_map[color])
+                    color_data = valid_data[valid_data['color'] == color]
+                    for x, y in zip(color_data['x'], color_data['y']):
+                        series.append(float(x), float(y))
+                    self.chart.addSeries(series)
+            else:
+                series = QScatterSeries()
+                for x, y in zip(valid_data['x'], valid_data['y']):
+                    series.append(float(x), float(y))
+                self.chart.addSeries(series)
         elif plot_type == "Line":
-            series = QLineSeries()
-            for x, y in zip(valid_data['x'], valid_data['y']):
-                series.append(float(x), float(y))
-            self.chart.addSeries(series)
+            if color_col != "None":
+                unique_colors = valid_data['color'].unique()
+                color_map = {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
+                for color in unique_colors:
+                    series = QLineSeries()
+                    series.setName(str(color))
+                    series.setColor(color_map[color])
+                    color_data = valid_data[valid_data['color'] == color]
+                    for x, y in zip(color_data['x'], color_data['y']):
+                        series.append(float(x), float(y))
+                    self.chart.addSeries(series)
+            else:
+                series = QLineSeries()
+                for x, y in zip(valid_data['x'], valid_data['y']):
+                    series.append(float(x), float(y))
+                self.chart.addSeries(series)
         elif plot_type == "Bar":
             series = QBarSeries()
-            bar_set = QBarSet(str(y_col))
-            for y in valid_data['y']:
-                bar_set.append(float(y))
-            series.append(bar_set)
+            if color_col != "None":
+                unique_colors = valid_data['color'].unique()
+                color_map = {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
+                for color in unique_colors:
+                    bar_set = QBarSet(str(color))
+                    bar_set.setColor(color_map[color])
+                    color_data = valid_data[valid_data['color'] == color]
+                    for y in color_data['y']:
+                        bar_set.append(float(y))
+                    series.append(bar_set)
+            else:
+                bar_set = QBarSet(str(y_col))
+                for y in valid_data['y']:
+                    bar_set.append(float(y))
+                series.append(bar_set)
             self.chart.addSeries(series)
         elif plot_type == "Histogram":
             series = QBarSeries()
-            bar_set = QBarSet("Frequency")
-            
-            # Calculate histogram data
-            hist, bin_edges = np.histogram(valid_data['x'], bins='auto')
-            
-            for count in hist:
-                bar_set.append(float(count))
-            series.append(bar_set)
+            if color_col != "None":
+                unique_colors = valid_data['color'].unique()
+                color_map = {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
+                for color in unique_colors:
+                    bar_set = QBarSet(str(color))
+                    bar_set.setColor(color_map[color])
+                    color_data = valid_data[valid_data['color'] == color]
+                    hist, _ = np.histogram(color_data['x'], bins='auto')
+                    for count in hist:
+                        bar_set.append(float(count))
+                    series.append(bar_set)
+            else:
+                bar_set = QBarSet("Frequency")
+                hist, _ = np.histogram(valid_data['x'], bins='auto')
+                for count in hist:
+                    bar_set.append(float(count))
+                series.append(bar_set)
             self.chart.addSeries(series)
         elif plot_type == "Box Plot":
-            series = QBoxPlotSeries()
-            series.setName(str(y_col))
-
-            # Calculate box plot statistics
-            q1 = np.percentile(valid_data['y'], 25)
-            median = np.median(valid_data['y'])
-            q3 = np.percentile(valid_data['y'], 75)
-            iqr = q3 - q1
-            lower_bound = q1 - 1.5 * iqr
-            upper_bound = q3 + 1.5 * iqr
-
-            # Create a QBoxSet for the entire dataset
-            box_set = QBoxSet(lower_bound, q1, median, q3, upper_bound)
-            series.append(box_set)
-
-            self.chart.addSeries(series)
+            if color_col != "None":
+                unique_colors = valid_data['color'].unique()
+                color_map = {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
+                series = QBoxPlotSeries()
+                for color in unique_colors:
+                    color_data = valid_data[valid_data['color'] == color]['y']
+                    q1 = np.percentile(color_data, 25)
+                    median = np.median(color_data)
+                    q3 = np.percentile(color_data, 75)
+                    iqr = q3 - q1
+                    lower_bound = q1 - 1.5 * iqr
+                    upper_bound = q3 + 1.5 * iqr
+                    box_set = QBoxSet(lower_bound, q1, median, q3, upper_bound)
+                    box_set.setLabel(str(color))
+                    box_set.setBrush(color_map[color])
+                    series.append(box_set)
+                self.chart.addSeries(series)
+            else:
+                series = QBoxPlotSeries()
+                q1 = np.percentile(valid_data['y'], 25)
+                median = np.median(valid_data['y'])
+                q3 = np.percentile(valid_data['y'], 75)
+                iqr = q3 - q1
+                lower_bound = q1 - 1.5 * iqr
+                upper_bound = q3 + 1.5 * iqr
+                box_set = QBoxSet(lower_bound, q1, median, q3, upper_bound)
+                series.append(box_set)
+                self.chart.addSeries(series)
 
         self.chart.setTitle(f"{plot_type}: {y_col}")
         self.chart.createDefaultAxes()
@@ -170,12 +239,16 @@ class PlottingWidget(QWidget):
         if plot_type == "Histogram":
             x_axis.setTitleText("Bins")
             y_axis.setTitleText("Frequency")
+            _, bin_edges = np.histogram(valid_data['x'], bins='auto')
             categories = [f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}" for i in range(len(bin_edges)-1)]
             x_axis.setCategories(categories)
         elif plot_type == "Box Plot":
             x_axis.setTitleText(str(y_col))
             y_axis.setTitleText("Value")
-            x_axis.setLabelsVisible(False)
+            if color_col != "None":
+                x_axis.setCategories(valid_data['color'].unique())
+            else:
+                x_axis.setLabelsVisible(False)
         else:
             x_axis.setTitleText(str(x_col))
             y_axis.setTitleText(str(y_col))
