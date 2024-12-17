@@ -10,6 +10,7 @@ from PySide6.QtCore import (
     QSize,
     QAbstractItemModel,
 )
+from PySide6.QtCore import Qt as QtCore
 from typing import List, Optional
 
 
@@ -117,9 +118,8 @@ class TableWidget(QWidget):
 
     def display_error(self, error_message: str) -> None:
         from PySide6.QtGui import QStandardItemModel
-        from PySide6.QtCore import Qt
 
         error_model = QStandardItemModel(1, 1)
-        error_model.setData(error_model.index(0, 0), error_message, Qt.DisplayRole)
+        error_model.setData(error_model.index(0, 0), error_message, QtCore.ItemDataRole.DisplayRole)
         self.table_view.setModel(error_model)
         self.combined_header.setFilterWidgets(1)
