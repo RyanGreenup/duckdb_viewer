@@ -26,6 +26,10 @@ import numpy as np
 from typing import Optional, List, Tuple, Dict, Union
 from numpy.typing import NDArray
 from enum import Enum, auto
+from pandas import Series
+
+# Custom type for the return value of _convert_to_numeric_or_categorical
+NumericOrCategoricalResult = Tuple[Series, Optional[List[str]]]
 
 
 class CustomToolTip(QWidget):
@@ -249,7 +253,7 @@ class PlottingWidget(QWidget):
 
     def _convert_to_numeric_or_categorical(
         self, data: pd.Series
-    ) -> Tuple[pd.Series, Optional[List[str]]]:
+    ) -> NumericOrCategoricalResult:
         if data.dtype == "object":
             categories = data.unique().tolist()
             return pd.Series(pd.Categorical(data).codes), categories
