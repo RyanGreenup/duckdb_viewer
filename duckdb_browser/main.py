@@ -304,30 +304,75 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
     return con
 
 
+class FilterHeader(QHeaderView):
+    def __init__(self, parent=None):
+        super().__init__(Qt.Orientation.Horizontal, parent)
+        self.setSectionsClickable(True)
+        self.setSortIndicatorShown(True)
+        self.filter_widgets = []
+
+    def setFilterWidgets(self, count):
+        self.filter_widgets = [QLineEdit(self) for _ in range(count)]
+        for widget in self.filter_widgets:
+            widget.setParent(self)
+        self.adjustPositions()
+
+    def filterWidget(self, index):
+        if 0 <= index < len(self.filter_widgets):
+            return self.filter_widgets[index]
+        return None
+
+    def sizeHint(self):
+        size = super().sizeHint()
+        if self.filter_widgets:
+            size.setHeight(size.height() + self.filter_widgets[0].sizeHint().height())
+        return size
+
+    def updateGeometries(self):
+        super().updateGeometries()
+        self.adjustPositions()
+
+    def adjustPositions(self):
+        for index, widget in enumerate(self.filter_widgets):
+            widget.setGeometry(
+                self.sectionPosition(index),
+                self.height() - widget.height(),
+                self.sectionSize(index),
+                widget.height()
+            )
+
+    def filterText(self, index):
+        if 0 <= index < len(self.filter_widgets):
+            return self.filter_widgets[index].text()
+        return ""
+
+    def clearFilters(self):
+        for widget in self.filter_widgets:
+            widget.clear()
+
 class TableWidget(QWidget):
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self._main_layout = QVBoxLayout(self)
-        self.filter_widget = QWidget(self)
-        self.filter_layout = QHBoxLayout(self.filter_widget)
-        self.filter_layout.setContentsMargins(0, 0, 0, 0)
         self.table_view = QTableView(self)
-        self._main_layout.addWidget(self.filter_widget)
+        self.filter_header = FilterHeader(self.table_view)
+        self.table_view.setHorizontalHeader(self.filter_header)
         self._main_layout.addWidget(self.table_view)
 
-    def clear_filters(self) -> None:
-        while self.filter_layout.count():
-            item = self.filter_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+    def set_model(self, model):
+        self.table_view.setModel(model)
+        self.filter_header.setFilterWidgets(model.columnCount())
 
-    def add_filter(self, placeholder: str) -> QLineEdit:
-        line_edit = QLineEdit(self.filter_widget)
-        line_edit.setPlaceholderText(placeholder)
-        self.filter_layout.addWidget(line_edit)
-        return line_edit
+    def clear_filters(self):
+        self.filter_header.clearFilters()
 
-    def get_main_layout(self) -> QVBoxLayout:
+    def add_filter_input(self, column, placeholder):
+        filter_widget = self.filter_header.filterWidget(column)
+        if filter_widget:
+            filter_widget.setPlaceholderText(placeholder)
+        return filter_widget
+
+    def get_main_layout(self):
         return self._main_layout
 
 
@@ -429,17 +474,17 @@ class MainWindow(QMainWindow):
 
     def load_table_or_view(self, name: str, focus_column: Optional[str] = None) -> None:
         self.table_model = DuckDBTableModel(self.con, name)
-        self.table_widget.table_view.setModel(self.table_model)
+        self.table_widget.set_model(self.table_model)
 
         # Clear existing filter inputs
         self.table_widget.clear_filters()
-        self.filter_inputs.clear()
+        self.filter_inputs = []
 
         # Create new filter inputs
         for col in range(self.table_model.columnCount()):
             column_name = self.table_model.headerData(col, Qt.Orientation.Horizontal)
             placeholder = f"Filter {column_name}"
-            line_edit = self.table_widget.add_filter(placeholder)
+            line_edit = self.table_widget.add_filter_input(col, placeholder)
             line_edit.textChanged.connect(
                 lambda text, column=col: self.apply_filter(text, column)
             )
