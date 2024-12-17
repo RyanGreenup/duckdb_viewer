@@ -268,6 +268,7 @@ class MainWindow(QMainWindow):
 
         # Set splitter sizes
         splitter.setSizes([200, 600])  # Adjust these values as needed
+        splitter.setHandleWidth(20)
 
         # Add splitter to main layout
         main_layout.addWidget(splitter)
