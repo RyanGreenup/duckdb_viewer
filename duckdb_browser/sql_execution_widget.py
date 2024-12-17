@@ -13,7 +13,9 @@ from model_table import DuckDBTableModel
 
 
 class SQLExecutionWidget(QWidget):
-    def __init__(self, connection: DuckDBPyConnection, parent: Optional[QWidget] = None):
+    def __init__(
+        self, connection: DuckDBPyConnection, parent: Optional[QWidget] = None
+    ):
         super().__init__(parent)
         self.connection: DuckDBPyConnection = connection
         self.main_layout: QVBoxLayout = QVBoxLayout(self)
