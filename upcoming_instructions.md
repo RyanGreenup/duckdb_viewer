@@ -3,7 +3,6 @@
 ## Required Features
 
 - Double click to set column width
-- Drag to make table wider
 - Horizontal scroll should be impleemented in the Execute SQL Tab
     - Make this a part of the Table view widget
 - User should be able to filter in the Execute SQL tab
@@ -39,7 +38,10 @@
 - Menu bar
     - Allow opening a new database
 
-## Filtering
+## Table
+
+- Drag to make table wider
+### Filtering
 
 - Fix filtering
     - When the user begins filtering, the horizontal scroll is lost and the table is not displayed correctly.
