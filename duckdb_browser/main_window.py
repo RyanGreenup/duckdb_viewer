@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QFileDialog,
     QTextEdit,
-    QGridLayout,
     QDialog,
     QPushButton,
 )
@@ -306,8 +305,11 @@ class MainWindow(QMainWindow):
             "DuckDB Browser is a simple GUI for browsing DuckDB databases.",
         )
 
+
 class SchemaDialog(QDialog):
-    def __init__(self, parent: Optional[QWidget] = None, title: str = "", content: str = ""):
+    def __init__(
+        self, parent: Optional[QWidget] = None, title: str = "", content: str = ""
+    ):
         super().__init__(parent)
         self.setWindowTitle(title)
         self.setMinimumSize(600, 400)
@@ -338,7 +340,7 @@ class SchemaDialog(QDialog):
         schema_dialog = SchemaDialog(
             self,
             "Database Schema",
-            f"Here's the complete schema of the database:\n\n{schema_str}"
+            f"Here's the complete schema of the database:\n\n{schema_str}",
         )
         schema_dialog.exec()
 
@@ -357,7 +359,7 @@ class SchemaDialog(QDialog):
         schema_dialog = SchemaDialog(
             self,
             "SQL Schema",
-            f"Here are the CREATE TABLE statements for the database:\n\n{'\n\n'.join(create_statements)}"
+            f"Here are the CREATE TABLE statements for the database:\n\n{'\n\n'.join(create_statements)}",
         )
         schema_dialog.exec()
 
