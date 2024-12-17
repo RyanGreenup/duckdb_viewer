@@ -3,10 +3,11 @@ from PySide6.QtWidgets import (
     QWidget,
     QSplitter,
     QVBoxLayout,
-    QPlainTextEdit,
+    QTextEdit,
     QPushButton,
 )
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
 from model_table import DuckDBTableModel
@@ -20,7 +21,7 @@ class SQLExecutionWidget(QWidget):
         self.connection: DuckDBPyConnection = connection
         self.main_layout: QVBoxLayout = QVBoxLayout(self)
         self.table_widget: TableWidget
-        self.text_edit: QPlainTextEdit
+        self.text_edit: QTextEdit
         self.execute_button: QPushButton
         self.create_content()
 
@@ -32,8 +33,8 @@ class SQLExecutionWidget(QWidget):
         self.table_widget = TableWidget()
         self.table_widget.table_view.setSortingEnabled(True)
 
-        # Create and set up the QPlainTextEdit
-        self.text_edit = QPlainTextEdit()
+        # Create and set up the QTextEdit
+        self.text_edit = QTextEdit()
         self.text_edit.setPlaceholderText("Enter your SQL query here...")
 
         # Create execute button
@@ -66,6 +67,12 @@ class SQLExecutionWidget(QWidget):
             result = self.connection.execute(query)
             model = DuckDBTableModel(self.connection, "", result=result)
             self.table_widget.set_model(model)
+            self.highlight_sql(success=True)
         except Exception as e:
-            # Handle the error (e.g., show it in the table view or in a message box)
-            print(f"Error executing SQL: {e}")
+            error_message = f"Error executing SQL: {str(e)}"
+            self.table_widget.display_error(error_message)
+            self.highlight_sql(success=False)
+
+    def highlight_sql(self, success: bool) -> None:
+        color = QColor(200, 255, 200) if success else QColor(255, 200, 200)
+        self.text_edit.setStyleSheet(f"background-color: {color.name()};")
