@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import seaborn as sns  # type: ignore
+import seaborn as sns
 import pandas as pd
 from typing import Optional, cast
 from matplotlib.axes import Axes
