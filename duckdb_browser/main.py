@@ -66,8 +66,8 @@ class TableListModel(QAbstractItemModel):
             return self.createIndex(row, column)
         return QModelIndex()
 
-    def parent(self, index: Union[QModelIndex, QPersistentModelIndex]) -> QObject:
-        return QObject()
+    def parent(self, index: Union[QModelIndex, QPersistentModelIndex]) -> QModelIndex:
+        return QModelIndex()
 
 
 class DuckDBTableModel(QAbstractTableModel):
