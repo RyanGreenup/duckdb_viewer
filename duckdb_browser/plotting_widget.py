@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 from PySide6.QtCore import Qt, QPointF
-from PySide6.QtCore import Qt as QtCore
 from PySide6.QtGui import QPainter
 from PySide6.QtCharts import (
     QChart,
@@ -21,7 +20,7 @@ from PySide6.QtCharts import (
     QBoxSet,
     QBarCategoryAxis,
 )
-from PySide6.QtGui import QPainter, QColor
+from PySide6.QtGui import QColor
 import pandas as pd
 import numpy as np
 from typing import Optional, List, Tuple, Dict, Union
@@ -111,10 +110,18 @@ class PlottingWidget(QWidget):
         self.plot_type_combo.setStyleSheet(style)
 
         # Set size policy to expand horizontally
-        self.x_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.y_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.color_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.plot_type_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.x_combo.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.y_combo.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.color_combo.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.plot_type_combo.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
 
         combo_layout = QHBoxLayout()
         combo_layout.addWidget(QLabel("Plot Type:"))
