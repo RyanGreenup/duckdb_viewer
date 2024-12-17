@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QPalette
+from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QPalette, QFont
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
 from model_table import DuckDBTableModel
@@ -36,7 +36,7 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
         text_format = QTextCharFormat()
         text_format.setForeground(QColor(color))
         if font_style == 'bold':
-            text_format.setFontWeight(QTextCharFormat.Bold)
+            text_format.setFontWeight(QFont.Bold)
         elif font_style == 'italic':
             text_format.setFontItalic(True)
         return text_format
