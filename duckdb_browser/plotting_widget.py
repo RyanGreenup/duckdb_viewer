@@ -35,8 +35,7 @@ DataType = Union[int, float, str]
 ChartAxis = Union[QValueAxis, QBarCategoryAxis]
 
 # Custom type for the return value of _convert_to_numeric_or_categorical
-# TODO consider str instead of Any
-NumericOrCategoricalResult = Tuple[Series[Union[int, float]], Optional[List[str]]]
+NumericOrCategoricalResult = Tuple[pd.Series, Optional[List[str]]]
 
 # Custom type for color map
 ColorMap = Dict[Union[str, float], QColor]
@@ -394,7 +393,7 @@ class PlottingWidget(QWidget):
             series.append(box_set)
             self.chart.addSeries(series)
 
-    def _create_box_set(self, data: pd.Series[Union[int, float]]) -> QBoxSet:
+    def _create_box_set(self, data: pd.Series) -> QBoxSet:
         q1 = float(np.percentile(data, 25))
         median = float(np.median(data))
         q3 = float(np.percentile(data, 75))
