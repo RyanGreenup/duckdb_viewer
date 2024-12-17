@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 from PySide6.QtCore import Qt, QPointF
+from PySide6.QtCore import Qt as QtCore
 from PySide6.QtCharts import (
     QChart,
     QChartView,
@@ -131,7 +132,7 @@ class PlottingWidget(QWidget):
         self.chart = QChart()
         self.chart_view = QChartView(self.chart)
         self.chart_view.setRenderHint(QPainter.Antialiasing)
-        self.chart_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.chart_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._layout.addWidget(self.chart_view)
 
         # Connect combo boxes to update_plot method
@@ -214,8 +215,8 @@ class PlottingWidget(QWidget):
 
         self.chart.setTitle(f"{plot_type.name.capitalize().replace('_', ' ')}: {y_col}")
         self.chart.createDefaultAxes()
-        x_axis = self.chart.axes(Qt.Horizontal)[0]
-        y_axis = self.chart.axes(Qt.Vertical)[0]
+        x_axis = self.chart.axes(QtCore.Horizontal)[0]
+        y_axis = self.chart.axes(QtCore.Vertical)[0]
 
         self._set_axis_labels(
             x_axis,
@@ -241,7 +242,7 @@ class PlottingWidget(QWidget):
     ) -> Tuple[pd.Series, Optional[List[str]]]:
         if data.dtype == "object":
             categories = data.unique().tolist()
-            return pd.Categorical(data).codes, categories
+            return pd.Series(pd.Categorical(data).codes), categories
         else:
             return pd.to_numeric(data, errors="coerce"), None
 
@@ -297,7 +298,7 @@ class PlottingWidget(QWidget):
             series.hovered.connect(self._show_tooltip)
             self.chart.addSeries(series)
 
-    def _plot_bar(self, valid_data: pd.DataFrame, color_col: str, x_col: str) -> None:
+    def _plot_bar(self, valid_data: pd.DataFrame, color_col: Optional[str], x_col: str) -> None:
         series = QBarSeries()
         if color_col != "None":
             unique_colors = valid_data["color"].unique()
@@ -318,7 +319,7 @@ class PlottingWidget(QWidget):
             series.append(bar_set)
         self.chart.addSeries(series)
 
-    def _plot_histogram(self, valid_data: pd.DataFrame, color_col: str) -> None:
+    def _plot_histogram(self, valid_data: pd.DataFrame, color_col: Optional[str]) -> None:
         series = QBarSeries()
         if color_col != "None":
             unique_colors = valid_data["color"].unique()
@@ -343,7 +344,7 @@ class PlottingWidget(QWidget):
             series.append(bar_set)
         self.chart.addSeries(series)
 
-    def _plot_box(self, valid_data: pd.DataFrame, color_col: str, x_col: str) -> None:
+    def _plot_box(self, valid_data: pd.DataFrame, color_col: Optional[str], x_col: str) -> None:
         if color_col != "None":
             unique_colors = valid_data["color"].unique()
             color_map = self._get_color_map(unique_colors)
