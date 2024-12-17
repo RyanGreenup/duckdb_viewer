@@ -6,6 +6,9 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QHBoxLayout,
     QLabel,
+    QStyleOptionFrame,
+    QStyle,
+    QCommonStyle,
 )
 from PySide6.QtCore import (
     Qt,
@@ -13,7 +16,7 @@ from PySide6.QtCore import (
     QAbstractItemModel,
     Signal,
 )
-from PySide6.QtGui import QFont, QColor, QPalette
+from PySide6.QtGui import QFont, QColor, QPalette, QPainter
 from PySide6.QtCore import Qt as QtCore
 from typing import List, Optional
 
@@ -56,19 +59,27 @@ class CustomHeaderWidget(QWidget):
         layout.addLayout(filter_layout)
 
     def style_filter_input(self):
-        self.filter_input.setStyleSheet("""
-            QLineEdit {
-                border: 1px solid #ccc;
-                border-radius: 3px;
-                padding: 2px 4px;
-                background-color: #f8f8f8;
-            }
-            QLineEdit:focus {
-                border-color: #66afe9;
-                outline: 0;
-                box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6);
-            }
-        """)
+        # Use QStyle to set the look of the QLineEdit
+        option = QStyleOptionFrame()
+        option.initFrom(self.filter_input)
+        option.state |= QStyle.State_Sunken
+        option.features = QStyleOptionFrame.None_
+        option.lineWidth = 1
+        option.midLineWidth = 0
+
+        # Set the frame style
+        self.filter_input.setFrame(True)
+        self.filter_input.setStyle(QCommonStyle())
+        self.filter_input.style().drawPrimitive(QStyle.PE_PanelLineEdit, option, QPainter(self.filter_input), self.filter_input)
+
+        # Set colors
+        palette = self.filter_input.palette()
+        palette.setColor(QPalette.Base, QColor("#f8f8f8"))
+        palette.setColor(QPalette.Text, QColor("#000000"))
+        self.filter_input.setPalette(palette)
+
+        # Set margins and padding
+        self.filter_input.setTextMargins(4, 2, 4, 2)
 
     def get_filter_input(self) -> QLineEdit:
         return self.filter_input
