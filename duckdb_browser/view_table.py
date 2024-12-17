@@ -6,20 +6,18 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QHBoxLayout,
     QLabel,
-    QStyleOptionFrame,
     QStyle,
     QProxyStyle,
 )
 from PySide6.QtCore import (
     Qt,
-    QSize,
     QAbstractItemModel,
     Signal,
-    QPoint,
 )
-from PySide6.QtGui import QFont, QColor, QPalette, QCursor
+from PySide6.QtGui import QFont, QColor, QPalette
 from PySide6.QtCore import Qt as QtCore
 from typing import List, Optional
+
 
 class CustomHeaderView(QHeaderView):
     def __init__(self, orientation, parent=None):
@@ -44,7 +42,10 @@ class CustomHeaderView(QHeaderView):
             return False
         left_edge = self.sectionViewportPosition(self.logicalIndex(visual_index))
         right_edge = left_edge + self.sectionSize(self.logicalIndex(visual_index))
-        return abs(pos.x() - left_edge) <= 5 or abs(pos.x() - right_edge) <= 5  # Increased from 3 to 5
+        return (
+            abs(pos.x() - left_edge) <= 5 or abs(pos.x() - right_edge) <= 5
+        )  # Increased from 3 to 5
+
 
 class CustomLineEditStyle(QProxyStyle):
     def drawPrimitive(self, element, option, painter, widget=None):
@@ -57,6 +58,7 @@ class CustomLineEditStyle(QProxyStyle):
         else:
             super().drawPrimitive(element, option, painter, widget)
 
+
 class CustomHeaderWidget(QWidget):
     filterChanged = Signal(int, str)
 
@@ -64,11 +66,11 @@ class CustomHeaderWidget(QWidget):
         super().__init__(parent)
         self.column = column
         self.setAutoFillBackground(True)
-        
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(2)
-        
+
         # Add column name label
         label = QLabel(column_name)
         label.setAlignment(Qt.AlignCenter)
@@ -76,23 +78,23 @@ class CustomHeaderWidget(QWidget):
         font.setBold(True)
         label.setFont(font)
         layout.addWidget(label)
-        
+
         # Create a horizontal layout for the filter input and icon
         filter_layout = QHBoxLayout()
         filter_layout.setContentsMargins(0, 0, 0, 0)
         filter_layout.setSpacing(4)
-        
+
         # Add filter icon (you can replace this with an actual icon)
         filter_icon = QLabel("🔍")
         filter_layout.addWidget(filter_icon)
-        
+
         # Add filter input
         self.filter_input = QLineEdit()
         self.filter_input.setPlaceholderText("Filter")
         self.filter_input.textChanged.connect(self.on_filter_changed)
         self.style_filter_input()
         filter_layout.addWidget(self.filter_input)
-        
+
         layout.addLayout(filter_layout)
 
     def style_filter_input(self):
@@ -115,6 +117,7 @@ class CustomHeaderWidget(QWidget):
     def on_filter_changed(self, text: str) -> None:
         self.filterChanged.emit(self.column, text)
 
+
 class TableWidget(QWidget):
     filterChanged = Signal(int, str)
 
@@ -125,11 +128,11 @@ class TableWidget(QWidget):
         self._main_layout.setSpacing(0)
         self.table_view = QTableView(self)
         self.table_view.setHorizontalScrollMode(QTableView.ScrollPerPixel)
-        
+
         # Use CustomHeaderView instead of default QHeaderView
         self.custom_header = CustomHeaderView(Qt.Horizontal, self.table_view)
         self.table_view.setHorizontalHeader(self.custom_header)
-        
+
         self.table_view.verticalHeader().setVisible(False)  # Hide vertical header
         self._main_layout.addWidget(self.table_view)
         self.header_widgets: List[CustomHeaderWidget] = []
@@ -150,7 +153,7 @@ class TableWidget(QWidget):
             header.setSectionResizeMode(col, QHeaderView.Interactive)  # Allow resizing
             header.setMinimumSectionSize(100)  # Set a minimum width for columns
             self.table_view.setIndexWidget(model.index(0, col), widget)
-        
+
         # Adjust the height of the first row to accommodate the header widgets
         self.table_view.setRowHeight(0, 60)
 
@@ -183,7 +186,7 @@ class TableWidget(QWidget):
                     str(model.index(row, column).data())
                 )
                 for row in range(min(10, model.rowCount()))
-            ]
+            ],
         )
         return max(min(width + margin, max_width), min_width)
 
