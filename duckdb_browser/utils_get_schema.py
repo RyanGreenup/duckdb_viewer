@@ -1,46 +1,56 @@
 import duckdb
 from typing import Dict, Any, List
 
-def get_duckdb_schema(table_name: str, con: duckdb.DuckDBPyConnection) -> List[Dict[str, Any]]:
-    schema = con.execute(f"DESCRIBE {table_name}").fetchdf()
-    columns = []
-    for _, row in schema.iterrows():
-        column = {
-            "name": row["column_name"],
-            "type": row["column_type"],
-            "null": "NULL" if row["null"] == "YES" else "NOT NULL",
-            "default": row["default"],
-        }
-        columns.append(column)
-    return columns
-
 def get_complete_schema(con: duckdb.DuckDBPyConnection) -> Dict[str, Any]:
-    all_tables = con.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'").fetchdf()
-    schema = {}
-    for table in all_tables['table_name']:
-        schema[table] = {
-            "columns": get_duckdb_schema(table, con),
-            "primary_keys": [],
-            "foreign_keys": []
-        }
+    try:
+        schema = {}
         
-        # Get primary keys
-        primary_keys = con.execute(f"""
-            SELECT column_name
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.key_column_usage kcu
-                ON tc.constraint_name = kcu.constraint_name
-                AND tc.table_schema = kcu.table_schema
-            WHERE tc.constraint_type = 'PRIMARY KEY'
-                AND tc.table_name = '{table}'
-                AND tc.table_schema = 'main'
-        """).fetchdf()
+        # Get all tables with their columns and primary key information
+        tables_info = con.execute("""
+            SELECT 
+                t.table_name,
+                c.column_name,
+                c.data_type,
+                c.is_nullable,
+                CASE WHEN pk.column_name IS NOT NULL THEN true ELSE false END AS is_primary_key
+            FROM 
+                information_schema.tables t
+            JOIN 
+                information_schema.columns c ON t.table_name = c.table_name
+            LEFT JOIN (
+                SELECT tc.table_name, kcu.column_name
+                FROM information_schema.table_constraints tc
+                JOIN information_schema.key_column_usage kcu 
+                    ON tc.constraint_name = kcu.constraint_name
+                WHERE tc.constraint_type = 'PRIMARY KEY'
+            ) pk ON t.table_name = pk.table_name AND c.column_name = pk.column_name
+            WHERE 
+                t.table_schema = 'main'
+            ORDER BY 
+                t.table_name, c.ordinal_position
+        """).fetchall()
         
-        if not primary_keys.empty:
-            schema[table]["primary_keys"] = primary_keys['column_name'].tolist()
+        for row in tables_info:
+            table_name, column_name, data_type, is_nullable, is_primary_key = row
+            
+            if table_name not in schema:
+                schema[table_name] = {
+                    'columns': [],
+                    'primary_keys': [],
+                    'foreign_keys': []  # Still empty, as DuckDB doesn't provide easy access to this info
+                }
+            
+            schema[table_name]['columns'].append({
+                'name': column_name,
+                'type': data_type,
+                'notnull': is_nullable == 'NO'
+            })
+            
+            if is_primary_key:
+                schema[table_name]['primary_keys'].append(column_name)
         
-        # Note: DuckDB doesn't support retrieving foreign key information through SQL queries
-        # If you need foreign key information, you'll have to implement a custom solution
-        # or maintain this information separately
+        return schema
     
-    return schema
+    except Exception as e:
+        print(f"Error retrieving schema: {str(e)}")
+        return {}

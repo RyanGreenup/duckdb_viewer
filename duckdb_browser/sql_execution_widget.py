@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QCompleter,
 )
+from utils_get_schema import get_complete_schema
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtCore import Qt, QStringListModel
 from PySide6.QtCore import QAbstractItemModel
@@ -237,16 +238,15 @@ class SQLExecutionWidget(QWidget):
         self.execute_sql(query)
 
     def update_completions(self) -> None:
-        table_names = self.connection.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-        ).fetchall()
-        table_names = [name[0] for name in table_names]
+        schema = get_complete_schema(self.connection)
+        table_names = list(schema.keys())
+        column_names = [col['name'] for table in schema.values() for col in table['columns']]
         keywords = [
             "SELECT", "FROM", "WHERE", "GROUP BY", "HAVING", "ORDER BY",
             "INSERT INTO", "UPDATE", "DELETE", "CREATE TABLE", "ALTER TABLE",
             "DROP TABLE", "JOIN", "INNER JOIN", "LEFT JOIN", "RIGHT JOIN"
         ]
-        completions = keywords + table_names
+        completions = keywords + table_names + column_names
         self.text_edit.completer.update_completions(completions)
 
     def execute_sql(self, query: str) -> None:
