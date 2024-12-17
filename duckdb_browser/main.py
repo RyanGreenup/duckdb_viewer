@@ -3,6 +3,8 @@ import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QTableView
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 import duckdb
+from duckdb import DuckDBPyConnection
+from typing import Optional
 import typer
 
 
@@ -22,7 +24,7 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, db_path: str = ":memory:", parent=None):
+    def __init__(self, db_path: str = ":memory:", parent: Optional[QMainWindow] = None):
         super().__init__(parent)
 
         # Connect to DuckDB
