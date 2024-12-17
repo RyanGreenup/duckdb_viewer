@@ -132,7 +132,9 @@ class PlottingWidget(QWidget):
         self.chart = QChart()
         self.chart_view = QChartView(self.chart)
         self.chart_view.setRenderHint(QPainter.Antialiasing)
-        self.chart_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.chart_view.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self._layout.addWidget(self.chart_view)
 
         # Connect combo boxes to update_plot method
@@ -298,7 +300,9 @@ class PlottingWidget(QWidget):
             series.hovered.connect(self._show_tooltip)
             self.chart.addSeries(series)
 
-    def _plot_bar(self, valid_data: pd.DataFrame, color_col: Optional[str], x_col: str) -> None:
+    def _plot_bar(
+        self, valid_data: pd.DataFrame, color_col: Optional[str], x_col: str
+    ) -> None:
         series = QBarSeries()
         if color_col != "None":
             unique_colors = valid_data["color"].unique()
@@ -319,7 +323,9 @@ class PlottingWidget(QWidget):
             series.append(bar_set)
         self.chart.addSeries(series)
 
-    def _plot_histogram(self, valid_data: pd.DataFrame, color_col: Optional[str]) -> None:
+    def _plot_histogram(
+        self, valid_data: pd.DataFrame, color_col: Optional[str]
+    ) -> None:
         series = QBarSeries()
         if color_col != "None":
             unique_colors = valid_data["color"].unique()
@@ -344,7 +350,9 @@ class PlottingWidget(QWidget):
             series.append(bar_set)
         self.chart.addSeries(series)
 
-    def _plot_box(self, valid_data: pd.DataFrame, color_col: Optional[str], x_col: str) -> None:
+    def _plot_box(
+        self, valid_data: pd.DataFrame, color_col: Optional[str], x_col: str
+    ) -> None:
         if color_col != "None":
             unique_colors = valid_data["color"].unique()
             color_map = self._get_color_map(unique_colors)
