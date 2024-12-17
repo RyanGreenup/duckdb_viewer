@@ -14,7 +14,7 @@ DataType = List[List[Any]]
 
 
 class DuckDBTableModel(QAbstractTableModel):
-    def __init__(self, connection: DuckDBPyConnection, table_name: str):
+    def __init__(self, connection: DuckDBPyConnection, table_name: str, result=None):
         super().__init__()
         self.connection = connection
         self.table_name = table_name
@@ -24,8 +24,10 @@ class DuckDBTableModel(QAbstractTableModel):
         self._sort_order = Qt.SortOrder.AscendingOrder
         self._filters: List[str] = []
         self._filtered_data: DataType = []
-
-        if table_name:
+        
+        if result is not None:
+            self._fetch_data_from_result(result)
+        elif table_name:
             self._fetch_data()
 
     def _fetch_data(self) -> None:
@@ -41,18 +43,16 @@ class DuckDBTableModel(QAbstractTableModel):
         self._filtered_data = self._data
         self._filters = [""] * len(self.headers)
 
-    def set_data_from_result(self, result) -> None:
-        self.layoutAboutToBeChanged.emit()
+    def _fetch_data_from_result(self, result) -> None:
         # Fetch column names and types
         self.headers = [(col[0], str(col[1])) for col in result.description]
-
+        
         # Fetch data
         self._data = result.fetchall()
         self._filtered_data = self._data
-
+        
         # Initialize filters
         self._filters = [""] * len(self.headers)
-        self.layoutChanged.emit()
 
     def set_filter(self, column: int, filter_text: str) -> None:
         self.layoutAboutToBeChanged.emit()

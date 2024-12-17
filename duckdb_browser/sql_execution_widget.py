@@ -58,8 +58,7 @@ class SQLExecutionWidget(QWidget):
     def execute_sql(self, query: str) -> None:
         try:
             result = self.connection.execute(query)
-            model = DuckDBTableModel(self.connection, "")
-            model.set_data_from_result(result)
+            model = DuckDBTableModel(self.connection, "", result=result)
             self.table_widget.set_model(model)
         except Exception as e:
             # Handle the error (e.g., show it in the table view or in a message box)
