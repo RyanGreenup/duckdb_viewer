@@ -122,3 +122,37 @@ class TableWidget(QWidget):
     def get_main_layout(self):
         return self._main_layout
 
+from typing import Optional, List
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QLineEdit
+from PySide6.QtCore import Qt
+from models.table import DuckDBTableModel
+
+class TableWidget(QWidget):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
+        super().__init__(parent)
+        self._main_layout = QVBoxLayout(self)
+        self.table_view = QTableView(self)
+        self._main_layout.addWidget(self.table_view)
+        self.filter_inputs: List[QLineEdit] = []
+
+    def set_model(self, model: DuckDBTableModel) -> None:
+        self.table_view.setModel(model)
+
+    def get_model(self) -> Optional[DuckDBTableModel]:
+        model = self.table_view.model()
+        return model if isinstance(model, DuckDBTableModel) else None
+
+    def clear_filters(self) -> None:
+        for filter_input in self.filter_inputs:
+            filter_input.deleteLater()
+        self.filter_inputs.clear()
+
+    def add_filter_input(self, column: int, placeholder: str) -> QLineEdit:
+        filter_input = QLineEdit(self)
+        filter_input.setPlaceholderText(placeholder)
+        self._main_layout.insertWidget(column, filter_input)
+        self.filter_inputs.append(filter_input)
+        return filter_input
+
+    def get_main_layout(self) -> QVBoxLayout:
+        return self._main_layout
