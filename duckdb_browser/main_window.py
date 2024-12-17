@@ -253,12 +253,12 @@ class MainWindow(QMainWindow):
         self.table_widget.clear_filters()
         for filter_input in self.filter_inputs:
             filter_input.clear()
-        if hasattr(self.table_model, 'clear_all_filters'):
+        if hasattr(self.table_model, "clear_all_filters"):
             self.table_model.clear_all_filters()
         else:
             # Fallback if clear_all_filters is not implemented
             for column in range(self.table_model.columnCount()):
-                self.table_model.set_filter(column, '')
+                self.table_model.set_filter(column, "")
 
     def show_about_dialog(self) -> None:
         QMessageBox.about(
