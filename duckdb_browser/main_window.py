@@ -19,6 +19,20 @@ from model_sidebar_list import TableListModel
 
 
 class MainWindow(QMainWindow):
+    con: DuckDBPyConnection
+    tab_widget: QTabWidget
+    tab1: QWidget
+    tab1_layout: QVBoxLayout
+    tab2: QWidget
+    tab2_layout: QVBoxLayout
+    sidebar: QTreeView
+    sidebar_model: TableListModel
+    table_widget: TableWidget
+    tab2_table_widget: TableWidget
+    text_edit: QPlainTextEdit
+    filter_inputs: List[QLineEdit]
+    table_model: DuckDBTableModel
+
     def __init__(
         self,
         db_path: str = ":memory:",
@@ -54,12 +68,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(main_widget)
 
         # Initialize filter inputs list
-        self.filter_inputs: List[QLineEdit] = []
+        self.filter_inputs = []
 
         # Load the specified table or the first table if it exists
         self.load_initial_table(initial_table)
 
-    def create_tab1_content(self):
+    def create_tab1_content(self) -> None:
         # Create splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
@@ -90,7 +104,7 @@ class MainWindow(QMainWindow):
         # Add splitter to tab1 layout
         self.tab1_layout.addWidget(splitter)
 
-    def create_tab2_content(self):
+    def create_tab2_content(self) -> None:
         # Create splitter
         splitter = QSplitter(Qt.Orientation.Vertical)
 
