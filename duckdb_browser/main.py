@@ -20,6 +20,7 @@ from PySide6.QtCore import (
     QModelIndex,
     QAbstractItemModel,
 )
+from typing import Any, List, Optional, Tuple
 import duckdb
 from duckdb import DuckDBPyConnection
 from typing import Any, Union
@@ -30,47 +31,106 @@ import pandas as pd
 DataType = List[List[Any]]
 
 
+class DatabaseItem:
+    def __init__(self, name: str, item_type: str, parent: Optional['DatabaseItem'] = None):
+        self.name = name
+        self.type = item_type
+        self.parent = parent
+        self.children: List['DatabaseItem'] = []
+
+    def add_child(self, child: 'DatabaseItem') -> None:
+        self.children.append(child)
+
+    def child_count(self) -> int:
+        return len(self.children)
+
+    def row(self) -> int:
+        if self.parent:
+            return self.parent.children.index(self)
+        return 0
+
 class TableListModel(QAbstractItemModel):
     def __init__(self, connection: DuckDBPyConnection):
         super().__init__()
         self.connection = connection
-        self.tables = self._fetch_tables()
+        self.root = DatabaseItem("Database", "root")
+        self._fetch_structure()
 
-    def _fetch_tables(self) -> List[str]:
-        query = "SELECT name FROM sqlite_master WHERE type='table'"
-        return [row[0] for row in self.connection.execute(query).fetchall()]
+    def _fetch_structure(self) -> None:
+        # Fetch tables and views
+        query = """
+        SELECT type, name
+        FROM sqlite_master
+        WHERE type IN ('table', 'view')
+        ORDER BY type, name
+        """
+        for item_type, name in self.connection.execute(query).fetchall():
+            item = DatabaseItem(name, item_type, self.root)
+            self.root.add_child(item)
 
-    def rowCount(
-        self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
-    ) -> int:
-        return len(self.tables) if not parent.isValid() else 0
+            # Fetch columns for each table/view
+            columns_query = f"PRAGMA table_info('{name}')"
+            for column_info in self.connection.execute(columns_query).fetchall():
+                column_name = column_info[1]
+                column_type = column_info[2]
+                column_item = DatabaseItem(f"{column_name} ({column_type})", "column", item)
+                item.add_child(column_item)
 
-    def columnCount(
-        self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
-    ) -> int:
+    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
+        if parent.isValid():
+            item = parent.internalPointer()
+            return item.child_count()
+        return self.root.child_count()
+
+    def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:
         return 1
 
-    def data(
-        self,
-        index: Union[QModelIndex, QPersistentModelIndex],
-        role: int = Qt.ItemDataRole.DisplayRole,
-    ) -> Any:
-        if role == Qt.ItemDataRole.DisplayRole:
-            return self.tables[index.row()]
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        if not index.isValid():
+            return None
+
+        item = index.internalPointer()
+
+        if role == Qt.DisplayRole:
+            return item.name
+        elif role == Qt.UserRole:
+            return item.type
+
         return None
 
-    def index(
-        self,
-        row: int,
-        column: int,
-        parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex(),
-    ) -> QModelIndex:
-        if self.hasIndex(row, column, parent):
-            return self.createIndex(row, column)
+    def index(self, row: int, column: int, parent: QModelIndex = QModelIndex()) -> QModelIndex:
+        if not self.hasIndex(row, column, parent):
+            return QModelIndex()
+
+        if not parent.isValid():
+            parent_item = self.root
+        else:
+            parent_item = parent.internalPointer()
+
+        child_item = parent_item.children[row]
+        if child_item:
+            return self.createIndex(row, column, child_item)
         return QModelIndex()
 
-    def parent(self, child: QModelIndex) -> QModelIndex:  # type: ignore # Documentation confirms this is correct
-        return QModelIndex()
+    def parent(self, index: QModelIndex) -> QModelIndex:
+        if not index.isValid():
+            return QModelIndex()
+
+        child_item = index.internalPointer()
+        parent_item = child_item.parent
+
+        if parent_item == self.root:
+            return QModelIndex()
+
+        return self.createIndex(parent_item.row(), 0, parent_item)
+
+    def get_item_info(self, index: QModelIndex) -> Tuple[str, str, Optional[str]]:
+        item = index.internalPointer()
+        if item.type == "column":
+            table_name = item.parent.name
+            column_name = item.name.split()[0]  # Remove the type information
+            return item.type, table_name, column_name
+        return item.type, item.name, None
 
 
 class DuckDBTableModel(QAbstractTableModel):
@@ -257,6 +317,7 @@ class MainWindow(QMainWindow):
         self.sidebar.setModel(self.sidebar_model)
         self.sidebar.setHeaderHidden(True)
         self.sidebar.clicked.connect(self.on_sidebar_clicked)
+        self.sidebar.expanded.connect(self.adjust_column_width)
 
         # Create and set up the table widget
         self.table_widget = TableWidget()
@@ -312,10 +373,16 @@ class MainWindow(QMainWindow):
             self.on_sidebar_clicked(first_table_index)
 
     def on_sidebar_clicked(self, index: QModelIndex) -> None:
-        table_name = self.sidebar_model.data(index, Qt.ItemDataRole.DisplayRole)
-        self.table_model = DuckDBTableModel(self.con, table_name)
+        item_type, item_name, column_name = self.sidebar_model.get_item_info(index)
+
+        if item_type in ('table', 'view'):
+            self.load_table_or_view(item_name)
+        elif item_type == 'column':
+            self.load_table_or_view(item_name, focus_column=column_name)
+
+    def load_table_or_view(self, name: str, focus_column: Optional[str] = None) -> None:
+        self.table_model = DuckDBTableModel(self.con, name)
         self.table_widget.table_view.setModel(self.table_model)
-        self.sidebar.setCurrentIndex(index)
 
         # Clear existing filter inputs
         self.table_widget.clear_filters()
@@ -323,14 +390,16 @@ class MainWindow(QMainWindow):
 
         # Create new filter inputs
         for col in range(self.table_model.columnCount()):
-            placeholder = (
-                f"Filter {self.table_model.headerData(col, Qt.Orientation.Horizontal)}"
-            )
+            column_name = self.table_model.headerData(col, Qt.Orientation.Horizontal)
+            placeholder = f"Filter {column_name}"
             line_edit = self.table_widget.add_filter(placeholder)
             line_edit.textChanged.connect(
                 lambda text, column=col: self.apply_filter(text, column)
             )
             self.filter_inputs.append(line_edit)
+
+            if focus_column and column_name == focus_column:
+                line_edit.setFocus()
 
         # Adjust column widths
         header = self.table_widget.table_view.horizontalHeader()
@@ -338,6 +407,9 @@ class MainWindow(QMainWindow):
 
         # Update the main layout
         self.table_widget.get_main_layout().update()
+
+    def adjust_column_width(self, index: QModelIndex) -> None:
+        self.sidebar.resizeColumnToContents(0)
 
     def apply_filter(self, text: str, column: int) -> None:
         self.table_model.set_filter(column, text)
