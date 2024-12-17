@@ -38,7 +38,7 @@ class FilterHeader(QHeaderView):
         self.adjustPositions()
 
     def adjustPositions(self) -> None:
-        if self.filter_widgets:
+        if hasattr(self, 'filter_widgets') and self.filter_widgets:
             header_height = super().sizeHint().height()
             for index, widget in enumerate(self.filter_widgets):
                 widget.setGeometry(
