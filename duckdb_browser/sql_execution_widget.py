@@ -14,7 +14,6 @@ from duckdb import DuckDBPyConnection
 from model_table import DuckDBTableModel
 from pygments import lex
 from pygments.lexers import SqlLexer
-from pygments.token import Token
 
 
 class FontStyle(Enum):
@@ -39,7 +38,9 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
         styles["Comment"] = self.format_for_token("#60a0b0", FontStyle.ITALIC)
         return styles
 
-    def format_for_token(self, color: str, font_style: FontStyle = FontStyle.NORMAL) -> QTextCharFormat:
+    def format_for_token(
+        self, color: str, font_style: FontStyle = FontStyle.NORMAL
+    ) -> QTextCharFormat:
         text_format = QTextCharFormat()
         text_format.setForeground(QColor(color))
         if font_style == FontStyle.BOLD:
@@ -51,9 +52,11 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
     def highlightBlock(self, text: str) -> None:
         for token_type, value in lex(text, self.lexer):
             token_str = str(token_type)
-            if token_str.split('.')[-1] in self.styles:
+            if token_str.split(".")[-1] in self.styles:
                 self.setFormat(
-                    self.currentBlock().position(), len(value), self.styles[token_str.split('.')[-1]]
+                    self.currentBlock().position(),
+                    len(value),
+                    self.styles[token_str.split(".")[-1]],
                 )
 
 
