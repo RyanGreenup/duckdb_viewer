@@ -148,3 +148,6 @@ class DuckDBTableModel(QAbstractTableModel):
             | Qt.ItemFlag.ItemIsSelectable
             | Qt.ItemFlag.ItemIsEditable
         )
+
+    def get_total_row_count(self) -> int:
+        return len(self._data)
