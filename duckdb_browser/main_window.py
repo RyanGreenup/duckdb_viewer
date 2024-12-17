@@ -33,6 +33,7 @@ class MainWindow(QMainWindow):
     table_widget: TableWidget
     filter_inputs: List[QLineEdit]
     table_model: DuckDBTableModel
+    status_bar: QStatusBar
 
     def __init__(
         self,
@@ -46,8 +47,8 @@ class MainWindow(QMainWindow):
         self.create_menu_bar()
 
         # Create status bar
-        self.statusBar = QStatusBar()
-        self.setStatusBar(self.statusBar)
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
 
         # Connect to DuckDB
         self.con = create_connection(db_path=db_path)
@@ -186,7 +187,7 @@ class MainWindow(QMainWindow):
         # Update the main layout
         self.table_widget.get_main_layout().update()
 
-        self.statusBar.showMessage(
+        self.status_bar.showMessage(
             f"Loaded {name} with {self.table_model.rowCount()} rows"
         )
 
@@ -216,7 +217,7 @@ class MainWindow(QMainWindow):
         self.table_model.set_filter(column, text)
         filtered_row_count = self.table_model.rowCount()
         total_row_count = self.table_model.get_total_row_count()
-        self.statusBar.showMessage(
+        self.status_bar.showMessage(
             f"Showing {filtered_row_count} of {total_row_count} rows"
         )
 
@@ -252,7 +253,12 @@ class MainWindow(QMainWindow):
         self.table_widget.clear_filters()
         for filter_input in self.filter_inputs:
             filter_input.clear()
-        self.table_model.clear_all_filters()
+        if hasattr(self.table_model, 'clear_all_filters'):
+            self.table_model.clear_all_filters()
+        else:
+            # Fallback if clear_all_filters is not implemented
+            for column in range(self.table_model.columnCount()):
+                self.table_model.set_filter(column, '')
 
     def show_about_dialog(self) -> None:
         QMessageBox.about(
