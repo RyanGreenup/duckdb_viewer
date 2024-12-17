@@ -14,9 +14,9 @@ from PySide6.QtCore import (
 )
 import duckdb
 from duckdb import DuckDBPyConnection
-from views.table_view import TableWidget
-from models.table import DuckDBTableModel
-from models.sidebar_list import TableListModel
+from view_table import TableWidget
+from model_table import DuckDBTableModel
+from model_sidebar_list import TableListModel
 
 
 class MainWindow(QMainWindow):

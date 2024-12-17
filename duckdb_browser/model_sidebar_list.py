@@ -9,6 +9,7 @@ from PySide6.QtCore import (
 from typing import Any, Tuple
 from duckdb import DuckDBPyConnection
 
+
 class DatabaseItem:
     def __init__(
         self, name: str, item_type: str, parent: Optional["DatabaseItem"] = None
@@ -28,7 +29,6 @@ class DatabaseItem:
         if self.parent:
             return self.parent.children.index(self)
         return 0
-
 
 
 class TableListModel(QAbstractItemModel):
@@ -148,4 +148,3 @@ class TableListModel(QAbstractItemModel):
             column_name = item.name.split()[0]  # Remove the type information
             return item.type, table_name, column_name
         return item.type, item.name, None
-

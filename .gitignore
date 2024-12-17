@@ -6,3 +6,4 @@ my_database.db
 .aider.input.history
 .aider.tags.cache.v3
 duckdb_browser.db
+duckdb_browser/__pycache__

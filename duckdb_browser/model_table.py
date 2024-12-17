@@ -13,8 +13,6 @@ import pandas as pd
 DataType = List[List[Any]]
 
 
-
-
 class DuckDBTableModel(QAbstractTableModel):
     def __init__(self, connection: DuckDBPyConnection, table_name: str):
         super().__init__()
@@ -93,7 +91,10 @@ class DuckDBTableModel(QAbstractTableModel):
         orientation: Qt.Orientation,
         role: int = Qt.ItemDataRole.DisplayRole,
     ) -> Any:
-        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.DisplayRole
+        ):
             return f"{self.headers[section][0]}\n({self.headers[section][1]})"
         return None
 
@@ -127,5 +128,3 @@ class DuckDBTableModel(QAbstractTableModel):
             | Qt.ItemFlag.ItemIsSelectable
             | Qt.ItemFlag.ItemIsEditable
         )
-
-

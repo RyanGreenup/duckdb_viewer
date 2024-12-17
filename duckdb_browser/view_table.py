@@ -8,9 +8,6 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import (
     Qt,
 )
-from typing import Optional, List
-from models.table import DuckDBTableModel
-
 
 
 class FilterHeader(QHeaderView):
@@ -42,13 +39,13 @@ class FilterHeader(QHeaderView):
         self.adjustPositions()
 
     def adjustPositions(self):
-        if hasattr(self, 'filter_widgets') and self.filter_widgets:
+        if hasattr(self, "filter_widgets") and self.filter_widgets:
             for index, widget in enumerate(self.filter_widgets):
                 widget.setGeometry(
                     self.sectionPosition(index),
                     self.height() - widget.height(),
                     self.sectionSize(index),
-                    widget.height()
+                    widget.height(),
                 )
 
     def filterText(self, index):
@@ -59,6 +56,7 @@ class FilterHeader(QHeaderView):
     def clearFilters(self):
         for widget in self.filter_widgets:
             widget.clear()
+
 
 class TableHeader(QHeaderView):
     def __init__(self, orientation, parent=None):
@@ -71,6 +69,7 @@ class TableHeader(QHeaderView):
         if self.orientation() == Qt.Orientation.Horizontal:
             size.setHeight(size.height() * 2)  # Double the height for two lines
         return size
+
 
 class CombinedHeaderWidget(QWidget):
     def __init__(self, parent=None):
@@ -98,6 +97,7 @@ class CombinedHeaderWidget(QWidget):
     def clearFilters(self):
         self.filter_header.clearFilters()
 
+
 class TableWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -105,7 +105,9 @@ class TableWidget(QWidget):
         self.table_view = QTableView(self)
         self.combined_header = CombinedHeaderWidget(self.table_view)
         self.table_view.setHorizontalHeader(self.combined_header.table_header)
-        self.table_view.setVerticalHeader(TableHeader(Qt.Orientation.Vertical, self.table_view))
+        self.table_view.setVerticalHeader(
+            TableHeader(Qt.Orientation.Vertical, self.table_view)
+        )
         self._main_layout.addWidget(self.table_view)
 
     def set_model(self, model):
@@ -122,35 +124,4 @@ class TableWidget(QWidget):
         return filter_widget
 
     def get_main_layout(self):
-        return self._main_layout
-
-
-class TableWidget(QWidget):
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self._main_layout = QVBoxLayout(self)
-        self.table_view = QTableView(self)
-        self._main_layout.addWidget(self.table_view)
-        self.filter_inputs: List[QLineEdit] = []
-
-    def set_model(self, model: DuckDBTableModel) -> None:
-        self.table_view.setModel(model)
-
-    def get_model(self) -> Optional[DuckDBTableModel]:
-        model = self.table_view.model()
-        return model if isinstance(model, DuckDBTableModel) else None
-
-    def clear_filters(self) -> None:
-        for filter_input in self.filter_inputs:
-            filter_input.deleteLater()
-        self.filter_inputs.clear()
-
-    def add_filter_input(self, column: int, placeholder: str) -> QLineEdit:
-        filter_input = QLineEdit(self)
-        filter_input.setPlaceholderText(placeholder)
-        self._main_layout.insertWidget(column, filter_input)
-        self.filter_inputs.append(filter_input)
-        return filter_input
-
-    def get_main_layout(self) -> QVBoxLayout:
         return self._main_layout
