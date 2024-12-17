@@ -263,7 +263,8 @@ class PlottingWidget(QWidget):
         self.chart_view.update()
 
     def _convert_to_numeric_or_categorical(
-        self, data: pd.Series
+        self,
+        data: pd.Series,  # type: ignore [type-arg]
     ) -> NumericOrCategoricalResult:
         if data.dtype == "object":
             categories: List[str] = [str(cat) for cat in data.unique().tolist()]

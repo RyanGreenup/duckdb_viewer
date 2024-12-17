@@ -80,7 +80,7 @@ class PlottingWidget(QWidget):
         self._layout.addLayout(combo_layout)
 
         self.figure: Figure = Figure(figsize=(5, 4), dpi=100)
-        self.canvas = FigureCanvas(self.figure)
+        self.canvas = FigureCanvas(self.figure)  # type: ignore [no-untyped-call]
         self._layout.addWidget(self.canvas)
 
         # Set Seaborn style
@@ -131,4 +131,4 @@ class PlottingWidget(QWidget):
         ax.set_title(f"{plot_type} Plot: {x_col} vs {y_col}")
         ax.tick_params(axis="x", rotation=45)
         self.figure.tight_layout()
-        self.canvas.draw_idle()
+        self.canvas.draw_idle()  # type: ignore [no-untyped-call]
