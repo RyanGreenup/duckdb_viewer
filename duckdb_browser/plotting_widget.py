@@ -19,16 +19,19 @@ from PySide6.QtCharts import (
     QBoxPlotSeries,
     QBoxSet,
     QBarCategoryAxis,
+    QAbstractAxis,
 )
 from PySide6.QtGui import QColor
 import pandas as pd
 import numpy as np
-from typing import Optional, List, Tuple, Dict, Union, TypeVar
+from typing import Optional, List, Tuple, Dict, Union, TypeVar, cast
 from numpy.typing import NDArray
 from enum import Enum, auto
 from pandas import Series
 
 T = TypeVar("T")
+
+ChartAxis = Union[QValueAxis, QBarCategoryAxis]
 
 # Custom type for the return value of _convert_to_numeric_or_categorical
 NumericOrCategoricalResult = Tuple[Series, Optional[List[str]]]
@@ -409,8 +412,8 @@ class PlottingWidget(QWidget):
 
     def _set_axis_labels(
         self,
-        x_axis: Union[QValueAxis, QBarCategoryAxis],
-        y_axis: Union[QValueAxis, QBarCategoryAxis],
+        x_axis: QAbstractAxis,
+        y_axis: QAbstractAxis,
         plot_type: PlotType,
         x_col: str,
         y_col: str,
@@ -422,8 +425,11 @@ class PlottingWidget(QWidget):
         if x_axis is None or y_axis is None:
             return
 
-        x_axis.setTitleText(str(x_col))
-        y_axis.setTitleText(str(y_col))
+        x_axis_cast = cast(ChartAxis, x_axis)
+        y_axis_cast = cast(ChartAxis, y_axis)
+
+        x_axis_cast.setTitleText(str(x_col))
+        y_axis_cast.setTitleText(str(y_col))
 
         if plot_type == PlotType.HISTOGRAM:
             x_axis.setTitleText("Bins")
