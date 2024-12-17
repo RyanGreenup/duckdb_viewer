@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QSplitter,
     QVBoxLayout,
+    QHBoxLayout,
     QTextEdit,
     QPushButton,
     QCompleter,
@@ -208,8 +209,11 @@ class SQLExecutionWidget(QWidget):
         self.setup_shortcuts()
 
     def create_content(self) -> None:
-        # Create vertical splitter
-        splitter = QSplitter(Qt.Orientation.Vertical)
+        # Create horizontal splitter for main content and sidebar
+        main_splitter = QSplitter(Qt.Orientation.Horizontal)
+
+        # Create vertical splitter for SQL input and table view
+        left_splitter = QSplitter(Qt.Orientation.Vertical)
 
         # Create and set up the SQLTextEdit
         self.text_edit = SQLTextEdit()
@@ -229,19 +233,23 @@ class SQLExecutionWidget(QWidget):
         self.table_widget.table_view.setSortingEnabled(True)
         self.table_widget.filterChanged.connect(self.on_filter_changed)
 
+        # Add input widget and table widget to left splitter
+        left_splitter.addWidget(input_widget)
+        left_splitter.addWidget(self.table_widget)
+
         # Create plotting widget
         self.plotting_widget = PlottingWidget()
 
-        # Add widgets to splitter
-        splitter.addWidget(input_widget)
-        splitter.addWidget(self.table_widget)
-        splitter.addWidget(self.plotting_widget)
+        # Add left splitter and plotting widget to main splitter
+        main_splitter.addWidget(left_splitter)
+        main_splitter.addWidget(self.plotting_widget)
 
         # Set splitter sizes
-        splitter.setSizes([200, 400, 200])  # Adjust these values as needed
+        left_splitter.setSizes([200, 400])  # Adjust these values as needed
+        main_splitter.setSizes([700, 300])  # Adjust these values as needed
 
-        # Add splitter to layout
-        self.main_layout.addWidget(splitter)
+        # Add main splitter to layout
+        self.main_layout.addWidget(main_splitter)
 
     def on_filter_changed(self, column: int, filter_text: str) -> None:
         model = self.table_widget.table_view.model()
