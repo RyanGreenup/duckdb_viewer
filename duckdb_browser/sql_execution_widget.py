@@ -28,7 +28,7 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
         cursor.setPosition(self.currentBlock().position())
         cursor.setPosition(
             self.currentBlock().position() + self.currentBlock().length(),
-            QTextCursor.SelectionType.KeepAnchor,
+            QTextCursor.KeepAnchor
         )
         cursor.insertHtml(html)
 
