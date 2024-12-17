@@ -7,14 +7,15 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QAbstractItemView,
 )
-from typing import List, Optional
+from typing import List, Optional, cast
 from PySide6.QtCore import (
     Qt,
     QModelIndex,
 )
 import duckdb
 from duckdb import DuckDBPyConnection
-from views.table import TableWidget, DuckDBTableModel
+from views.table import TableWidget
+from models.table import DuckDBTableModel
 from models.sidebar_list import TableListModel
 
 
@@ -127,13 +128,14 @@ class MainWindow(QMainWindow):
             column_name, column_type = self.table_model.headers[col]
             placeholder = f"Filter {column_name}"
             line_edit = self.table_widget.add_filter_input(col, placeholder)
-            line_edit.textChanged.connect(
-                lambda text, column=col: self.apply_filter(text, column)
-            )
-            self.filter_inputs.append(line_edit)
+            if line_edit:
+                line_edit.textChanged.connect(
+                    lambda text, column=col: self.apply_filter(text, column)
+                )
+                self.filter_inputs.append(line_edit)
 
-            if focus_column and column_name == focus_column:
-                line_edit.setFocus()
+                if focus_column and column_name == focus_column:
+                    line_edit.setFocus()
 
         # Adjust column widths
         self.table_widget.table_view.resizeColumnsToContents()
