@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import seaborn as sns
@@ -18,7 +18,9 @@ class PlottingWidget(QWidget):
         self.update_button = QPushButton("Update Plot")
         
         combo_layout = QHBoxLayout()
+        combo_layout.addWidget(QLabel("X-axis:"))
         combo_layout.addWidget(self.x_combo)
+        combo_layout.addWidget(QLabel("Y-axis:"))
         combo_layout.addWidget(self.y_combo)
         combo_layout.addWidget(self.update_button)
         self._layout.addLayout(combo_layout)

@@ -295,17 +295,14 @@ class SQLExecutionWidget(QWidget):
             # Update plot with new data
             if model.rowCount() > 0 and model.columnCount() >= 2:
                 data = {
-                    model.headerData(0, Qt.Orientation.Horizontal): [
-                        model.data(model.index(row, 0))
+                    model.headerData(col, Qt.Orientation.Horizontal): [
+                        model.data(model.index(row, col))
                         for row in range(model.rowCount())
-                    ],
-                    model.headerData(1, Qt.Orientation.Horizontal): [
-                        model.data(model.index(row, 1))
-                        for row in range(model.rowCount())
-                    ],
+                    ]
+                    for col in range(model.columnCount())
                 }
                 df = pd.DataFrame(data)
-                self.plotting_widget.plot_data(df)
+                self.plotting_widget.set_data(df)
 
         except Exception as e:
             error_message = f"Error executing SQL: {str(e)}"
