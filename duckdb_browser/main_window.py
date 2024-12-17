@@ -1,3 +1,4 @@
+import json
 from PySide6.QtWidgets import (
     QMainWindow,
     QTreeView,
@@ -300,18 +301,24 @@ class MainWindow(QMainWindow):
         )
 
     def show_schema(self) -> None:
+        if not self.con:
+            QMessageBox.warning(self, "No Database Open", "Please open a database before viewing the schema.")
+            return
+
         schema = get_complete_schema(self.con)
+        schema_str = json.dumps(schema, indent=2)
+
         schema_dialog = QMessageBox(self)
         schema_dialog.setWindowTitle("Database Schema")
         schema_dialog.setText("Here's the complete schema of the database:")
-        
+
         text_edit = QTextEdit()
-        text_edit.setPlainText(schema)
+        text_edit.setPlainText(schema_str)
         text_edit.setReadOnly(True)
-        
+
         schema_dialog.layout().addWidget(text_edit, 1, 0, 1, schema_dialog.layout().columnCount())
         schema_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
-        
+
         schema_dialog.exec()
 
 
