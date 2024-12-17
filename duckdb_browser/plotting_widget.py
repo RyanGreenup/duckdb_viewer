@@ -319,13 +319,13 @@ class PlottingWidget(QWidget):
         self, valid_data: pd.DataFrame, color_col: Optional[str], x_col: str
     ) -> None:
         series = QBarSeries()
-        if color_col != "None":
-            unique_colors = valid_data["color"].unique()
+        if color_col and color_col != "None":
+            unique_colors = valid_data[color_col].unique()
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
                 bar_set = QBarSet(str(color))
                 bar_set.setColor(color_map[color])
-                color_data = valid_data[valid_data["color"] == color]
+                color_data = valid_data[valid_data[color_col] == color]
                 for x, x_plot in zip(color_data["x"], color_data["x_plot"]):
                     bar_set.append(float(x_plot))
                     bar_set.setLabel(str(x))
