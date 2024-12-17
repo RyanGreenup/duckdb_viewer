@@ -32,6 +32,10 @@ class CustomHeaderView(QHeaderView):
         self.setSectionsMovable(False)
         self.setStretchLastSection(True)
         self.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.table_widget: Optional['TableWidget'] = None
+
+    def setTableWidget(self, table_widget: 'TableWidget') -> None:
+        self.table_widget = table_widget
 
     def mouseMoveEvent(self, e: QMouseEvent) -> None:
         if self.cursor().shape() != Qt.CursorShape.SplitHCursor:
@@ -44,7 +48,9 @@ class CustomHeaderView(QHeaderView):
     def mouseDoubleClickEvent(self, e: QMouseEvent) -> None:
         if self.isOnSectionResizeArea(e.position().toPoint()):
             section = self.logicalIndexAt(e.position().toPoint())
-            self.resizeSection(section, self.sizeHintForColumn(section))
+            if self.table_widget:
+                width = self.table_widget.calculate_column_width(section)
+                self.resizeSection(section, width)
         else:
             super().mouseDoubleClickEvent(e)
 
@@ -115,7 +121,7 @@ class CustomHeaderWidget(QWidget):
 
         layout.addLayout(filter_layout)
 
-    def style_filter_input(self):
+    def style_filter_input(self) -> None:
         # Set custom style
         custom_style = CustomLineEditStyle()
         self.filter_input.setStyle(custom_style)
@@ -151,15 +157,12 @@ class TableWidget(QWidget):
         self.custom_header = CustomHeaderView(
             Qt.Orientation.Horizontal, self.table_view
         )
-        self.custom_header.sizeHintForColumn = self.sizeHintForColumn
+        self.custom_header.setTableWidget(self)
         self.table_view.setHorizontalHeader(self.custom_header)
 
         self.table_view.verticalHeader().setVisible(False)  # Hide vertical header
         self._main_layout.addWidget(self.table_view)
         self.header_widgets: List[CustomHeaderWidget] = []
-
-    def sizeHintForColumn(self, column: int) -> int:
-        return self.calculate_column_width(column)
 
     def set_model(self, model: QAbstractItemModel) -> None:
         self.table_view.setModel(model)
