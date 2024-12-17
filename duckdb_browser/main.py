@@ -96,16 +96,16 @@ class TableListModel(QAbstractItemModel):
     def data(
         self,
         index: Union[QModelIndex, QPersistentModelIndex],
-        role: int = Qt.DisplayRole,
+        role: int = Qt.ItemDataRole.DisplayRole,
     ) -> Any:
         if not index.isValid():
             return None
 
         item = index.internalPointer()
 
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return item.name
-        elif role == Qt.UserRole:
+        elif role == Qt.ItemDataRole.UserRole:
             return item.type
 
         return None
