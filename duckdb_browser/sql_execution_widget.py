@@ -278,6 +278,7 @@ class SQLExecutionWidget(QWidget):
             "JOIN",
             "INNER JOIN",
             "LEFT JOIN",
+            "LIMIT",
             "RIGHT JOIN",
         ]
         completions = keywords + table_names + column_names
