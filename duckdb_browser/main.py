@@ -56,7 +56,7 @@ class TableListModel(QAbstractItemModel):
         return None
 
     def index(
-        self, row: int, column: int, parent: QModelIndex = QModelIndex()
+        self, row: int, column: int, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
     ) -> QModelIndex:
         if self.hasIndex(row, column, parent):
             return self.createIndex(row, column)
