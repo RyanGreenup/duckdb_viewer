@@ -27,17 +27,26 @@ class DuckDBTableModel(QAbstractTableModel):
     def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:
         return len(self.headers)
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.DisplayRole) -> Optional[str]:
+    def data(
+        self, index: QModelIndex, role: Qt.ItemDataRole = Qt.DisplayRole
+    ) -> Optional[str]:
         if role == Qt.DisplayRole:
             return str(self.data.iloc[index.row(), index.column()])
         return None
 
-    def headerData(self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = Qt.DisplayRole) -> Optional[str]:
+    def headerData(
+        self,
+        section: int,
+        orientation: Qt.Orientation,
+        role: Qt.ItemDataRole = Qt.DisplayRole,
+    ) -> Optional[str]:
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self.headers[section]
         return None
 
-    def setData(self, index: QModelIndex, value: any, role: Qt.ItemDataRole = Qt.EditRole) -> bool:
+    def setData(
+        self, index: QModelIndex, value: any, role: Qt.ItemDataRole = Qt.EditRole
+    ) -> bool:
         if role == Qt.EditRole:
             row = index.row()
             col = index.column()
