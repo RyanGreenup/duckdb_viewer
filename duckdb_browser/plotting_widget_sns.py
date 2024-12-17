@@ -17,6 +17,7 @@ from matplotlib.axes import Axes
 
 PlotType = Literal["Scatter", "Line", "Bar"]
 
+
 class PlottingWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -58,7 +59,9 @@ class PlottingWidget(QWidget):
         self.plot_type_combo.setStyleSheet(style)
 
         # Set size policy to expand horizontally
-        size_policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        size_policy = QSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
         self.x_combo.setSizePolicy(size_policy)
         self.y_combo.setSizePolicy(size_policy)
         self.plot_type_combo.setSizePolicy(size_policy)
