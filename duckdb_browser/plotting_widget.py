@@ -108,35 +108,28 @@ class PlottingWidget(QWidget):
 
         plot_type = self.plot_type_combo.currentText()
 
+        # Convert data to numeric, replacing non-numeric values with NaN
+        x_data = pd.to_numeric(self.data[x_col], errors='coerce')
+        y_data = pd.to_numeric(self.data[y_col], errors='coerce')
+
+        # Remove NaN values
+        valid_data = pd.DataFrame({'x': x_data, 'y': y_data}).dropna()
+
         if plot_type == "Scatter":
             series = QScatterSeries()
-            for x, y in zip(self.data[x_col], self.data[y_col]):
-                if x is not None and y is not None:
-                    try:
-                        series.append(float(x), float(y))
-                    except ValueError:
-                        continue  # Skip this point if conversion fails
+            for x, y in zip(valid_data['x'], valid_data['y']):
+                series.append(float(x), float(y))
             self.chart.addSeries(series)
         elif plot_type == "Line":
             series = QLineSeries()
-            for x, y in zip(self.data[x_col], self.data[y_col]):
-                if x is not None and y is not None:
-                    try:
-                        series.append(float(x), float(y))
-                    except ValueError:
-                        continue  # Skip this point if conversion fails
+            for x, y in zip(valid_data['x'], valid_data['y']):
+                series.append(float(x), float(y))
             self.chart.addSeries(series)
         elif plot_type == "Bar":
             series = QBarSeries()
             bar_set = QBarSet(str(y_col))
-            for y in self.data[y_col]:
-                if y is not None:
-                    try:
-                        bar_set.append(float(y))
-                    except ValueError:
-                        bar_set.append(0)  # Use 0 for invalid values
-                else:
-                    bar_set.append(0)  # Use 0 for None values
+            for y in valid_data['y']:
+                bar_set.append(float(y))
             series.append(bar_set)
             self.chart.addSeries(series)
 
@@ -148,7 +141,7 @@ class PlottingWidget(QWidget):
         y_axis.setTitleText(str(y_col))
 
         if plot_type == "Bar":
-            categories = [str(x) if x is not None else '' for x in self.data[x_col]]
+            categories = [str(x) for x in valid_data['x']]
             x_axis.setCategories(categories)
 
         self.chart_view.update()
