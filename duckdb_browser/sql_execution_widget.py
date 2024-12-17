@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QTextCharFormat, QSyntaxHighlighter, QTextCursor
+from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCursor
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
 from model_table import DuckDBTableModel
@@ -20,7 +20,7 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
     def __init__(self, parent):
         super().__init__(parent)
         self.lexer = SqlLexer()
-        self.formatter = HtmlFormatter(style='default')
+        self.formatter = HtmlFormatter(style="default")
 
     def highlightBlock(self, text):
         html = highlight(text, self.lexer, self.formatter)
