@@ -56,6 +56,10 @@ class TableListModel(QAbstractItemModel):
         super().__init__()
         self.connection = connection
         self.root = DatabaseItem("Database", "root")
+        self.tables_item = DatabaseItem("Tables", "category", self.root)
+        self.views_item = DatabaseItem("Views", "category", self.root)
+        self.root.add_child(self.tables_item)
+        self.root.add_child(self.views_item)
         self._fetch_structure()
 
     def _fetch_structure(self) -> None:
@@ -67,8 +71,9 @@ class TableListModel(QAbstractItemModel):
         ORDER BY type, name
         """
         for item_type, name in self.connection.execute(query).fetchall():
-            item = DatabaseItem(name, item_type, self.root)
-            self.root.add_child(item)
+            parent_item = self.tables_item if item_type == 'table' else self.views_item
+            item = DatabaseItem(name, item_type, parent_item)
+            parent_item.add_child(item)
 
             # Fetch columns for each table/view
             columns_query = f"PRAGMA table_info('{name}')"
