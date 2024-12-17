@@ -10,6 +10,17 @@ Duckdb Browser is GUI to interact witha Duckdb database. It uses Pandas and QT t
 - Execute SQL Queries
 - Plot results of SQL Queries
 
+## Installation
+
+```sh
+pipx install 'git+https://github.com/RyanGreenup/duckdb_viewer'
+```
+
+## Usage
+
+```sh
+duckdb-browser --db-path path/to/your/data.duckdb
+```
 
 ## Screenshots
 
