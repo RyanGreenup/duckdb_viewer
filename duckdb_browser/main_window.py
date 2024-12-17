@@ -42,6 +42,7 @@ class MainWindow(QMainWindow):
     filter_inputs: List[QLineEdit]
     table_model: DuckDBTableModel
     status_bar: QStatusBar
+    schema_dialog: Optional['SchemaDialog']
 
     def __init__(
         self,
@@ -247,10 +248,10 @@ class MainWindow(QMainWindow):
         open_db_action.triggered.connect(self.open_database)
 
         show_schema_action = file_menu.addAction("Show &Schema")
-        show_schema_action.triggered.connect(self.show_schema)
+        show_schema_action.triggered.connect(self.show_schema_dialog)
 
         show_sql_schema_action = file_menu.addAction("Show &SQL Schema")
-        show_sql_schema_action.triggered.connect(self.show_sql_schema)
+        show_sql_schema_action.triggered.connect(self.show_sql_schema_dialog)
 
         exit_action = file_menu.addAction("E&xit")
         exit_action.triggered.connect(self.close)
@@ -305,21 +306,31 @@ class MainWindow(QMainWindow):
             "DuckDB Browser is a simple GUI for browsing DuckDB databases.",
         )
 
+    def show_schema_dialog(self) -> None:
+        if not hasattr(self, 'schema_dialog') or self.schema_dialog is None:
+            self.schema_dialog = SchemaDialog(self, self.con)
+        self.schema_dialog.show_schema()
+
+    def show_sql_schema_dialog(self) -> None:
+        if not hasattr(self, 'schema_dialog') or self.schema_dialog is None:
+            self.schema_dialog = SchemaDialog(self, self.con)
+        self.schema_dialog.show_sql_schema()
+
 
 class SchemaDialog(QDialog):
+    con: DuckDBPyConnection
     def __init__(
-        self, parent: Optional[QWidget] = None, title: str = "", content: str = ""
+        self, parent: Optional[QWidget] = None, con: DuckDBPyConnection = None
     ):
         super().__init__(parent)
-        self.setWindowTitle(title)
+        self.con = con
         self.setMinimumSize(600, 400)
 
         layout = QVBoxLayout(self)
 
-        text_edit = QTextEdit(self)
-        text_edit.setPlainText(content)
-        text_edit.setReadOnly(True)
-        layout.addWidget(text_edit)
+        self.text_edit = QTextEdit(self)
+        self.text_edit.setReadOnly(True)
+        layout.addWidget(self.text_edit)
 
         ok_button = QPushButton("OK", self)
         ok_button.clicked.connect(self.accept)
@@ -337,12 +348,9 @@ class SchemaDialog(QDialog):
         schema = get_complete_schema(self.con)
         schema_str = json.dumps(schema, indent=2)
 
-        schema_dialog = SchemaDialog(
-            self,
-            "Database Schema",
-            f"Here's the complete schema of the database:\n\n{schema_str}",
-        )
-        schema_dialog.exec()
+        self.setWindowTitle("Database Schema")
+        self.text_edit.setPlainText(f"Here's the complete schema of the database:\n\n{schema_str}")
+        self.exec()
 
     def show_sql_schema(self) -> None:
         if not self.con:
@@ -356,12 +364,9 @@ class SchemaDialog(QDialog):
         schema = get_complete_schema(self.con)
         create_statements = generate_create_table_statements(schema)
 
-        schema_dialog = SchemaDialog(
-            self,
-            "SQL Schema",
-            f"Here are the CREATE TABLE statements for the database:\n\n{'\n\n'.join(create_statements)}",
-        )
-        schema_dialog.exec()
+        self.setWindowTitle("SQL Schema")
+        self.text_edit.setPlainText(f"Here are the CREATE TABLE statements for the database:\n\n{'\n\n'.join(create_statements)}")
+        self.exec()
 
 
 def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
