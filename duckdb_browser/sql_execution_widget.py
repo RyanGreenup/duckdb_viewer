@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCursor
+from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCursor, QTextDocument
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
 from model_table import DuckDBTableModel
