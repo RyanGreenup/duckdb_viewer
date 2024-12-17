@@ -9,8 +9,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QStringListModel
 from PySide6.QtCore import QAbstractItemModel
-from PySide6.QtGui import QKeyEvent
 from PySide6.QtGui import (
+    QKeyEvent,
     QColor,
     QSyntaxHighlighter,
     QTextCharFormat,
@@ -18,6 +18,7 @@ from PySide6.QtGui import (
     QFont,
     QTextCursor,
 )
+from PySide6.QtCore import Qt
 from enum import Enum
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
@@ -167,16 +168,16 @@ class SQLTextEdit(QTextEdit):
         )
         self.completer.complete(cr)
 
-    def text_under_cursor(self):
+    def text_under_cursor(self) -> str:
         tc = self.textCursor()
-        tc.select(QTextCursor.WordUnderCursor)
+        tc.select(QTextCursor.SelectionType.WordUnderCursor)
         return tc.selectedText()
 
-    def insert_completion(self, completion):
+    def insert_completion(self, completion: str) -> None:
         tc = self.textCursor()
         extra = len(completion) - len(self.completer.completionPrefix())
-        tc.movePosition(QTextCursor.Left)
-        tc.movePosition(QTextCursor.EndOfWord)
+        tc.movePosition(QTextCursor.MoveOperation.Left)
+        tc.movePosition(QTextCursor.MoveOperation.EndOfWord)
         tc.insertText(completion[-extra:])
         self.setTextCursor(tc)
 
