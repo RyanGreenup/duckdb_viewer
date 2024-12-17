@@ -13,6 +13,15 @@ DataType = List[List[Any]]
 
 
 class DuckDBTableModel(QAbstractTableModel):
+    connection: DuckDBPyConnection
+    table_name: str
+    _data: DataType
+    headers: List[Tuple[str, str]]
+    _sort_column: int
+    _sort_order: Qt.SortOrder
+    _filters: List[str]
+    _filtered_data: DataType
+
     def __init__(
         self,
         connection: DuckDBPyConnection,
@@ -20,14 +29,14 @@ class DuckDBTableModel(QAbstractTableModel):
         result: Optional[Any] = None,
     ):
         super().__init__()
-        self.connection: DuckDBPyConnection = connection
-        self.table_name: str = table_name
-        self._data: DataType = []
-        self.headers: List[Tuple[str, str]] = []  # (column_name, column_type)
-        self._sort_column: int = 0
-        self._sort_order: Qt.SortOrder = Qt.SortOrder.AscendingOrder
-        self._filters: List[str] = []
-        self._filtered_data: DataType = []
+        self.connection = connection
+        self.table_name = table_name
+        self._data = []
+        self.headers = []  # (column_name, column_type)
+        self._sort_column = 0
+        self._sort_order = Qt.SortOrder.AscendingOrder
+        self._filters = []
+        self._filtered_data = []
 
         if result is not None:
             self._fetch_data_from_result(result)
