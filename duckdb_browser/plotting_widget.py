@@ -364,22 +364,21 @@ class PlottingWidget(QWidget):
     def _plot_box(
         self, valid_data: pd.DataFrame, color_col: Optional[str], x_col: str
     ) -> None:
-        if color_col != "None":
-            unique_colors = valid_data["color"].unique()
+        series = QBoxPlotSeries()
+        if color_col and color_col != "None":
+            unique_colors = valid_data[color_col].unique()
             color_map = self._get_color_map(unique_colors)
-            series = QBoxPlotSeries()
             for color in unique_colors:
-                color_data = valid_data[valid_data["color"] == color]["x_plot"]
+                color_data = valid_data[valid_data[color_col] == color]["x_plot"]
                 box_set = self._create_box_set(color_data)
                 box_set.setLabel(str(color))
                 box_set.setBrush(color_map[color])
                 series.append(box_set)
-            self.chart.addSeries(series)
         else:
-            series = QBoxPlotSeries()
             box_set = self._create_box_set(valid_data["x_plot"])
+            box_set.setLabel(x_col)
             series.append(box_set)
-            self.chart.addSeries(series)
+        self.chart.addSeries(series)
 
     def _create_box_set(self, data: pd.Series) -> QBoxSet:  # type: ignore [type-arg]
         q1 = float(np.percentile(data, 25))
@@ -423,7 +422,7 @@ class PlottingWidget(QWidget):
         if plot_type == PlotType.HISTOGRAM:
             x_axis.setTitleText("Bins")
             y_axis.setTitleText("Frequency")
-            _, bin_edges = np.histogram(valid_data["x"], bins="auto")
+            _, bin_edges = np.histogram(valid_data["y_plot"], bins="auto")
             categories = [
                 f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}"
                 for i in range(len(bin_edges) - 1)
@@ -432,9 +431,9 @@ class PlottingWidget(QWidget):
         elif plot_type == PlotType.BOX_PLOT:
             x_axis.setTitleText(str(y_col))
             y_axis.setTitleText("Value")
-            if color_col:
+            if color_col and color_col != "None":
                 categories = [
-                    str(item) for item in valid_data["color"].unique().tolist()
+                    str(item) for item in valid_data[color_col].unique().tolist()
                 ]
                 self._set_categories(x_axis, categories)
             else:
