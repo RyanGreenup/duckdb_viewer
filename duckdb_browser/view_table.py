@@ -18,7 +18,7 @@ class FilterHeader(QHeaderView):
         super().__init__(Qt.Orientation.Horizontal, parent)
         self.setSectionsClickable(True)
         self.setSortIndicatorShown(True)
-        self.filter_widgets: List[QLineEdit] = []
+        self.filter_widgets: List[QLineEdit] = []  # Initialize the filter_widgets list
         self.setStretchLastSection(True)
 
     def setFilterWidgets(self, count: int) -> None:
@@ -68,6 +68,7 @@ class CombinedHeaderWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.filter_header = FilterHeader(self)
+        self.filter_header.setFilterWidgets(0)  # Initialize with 0 columns, update later when model is set
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
