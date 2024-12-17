@@ -3,30 +3,25 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QComboBox,
-    QPushButton,
     QLabel,
     QSizePolicy,
 )
 from PySide6.QtCore import Qt
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import seaborn as sns
+from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet
+from PySide6.QtGui import QPainter
 import pandas as pd
 from typing import Optional, List
-from matplotlib.axes import Axes
-
 
 class PlottingWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._layout = QVBoxLayout(self)
 
-        # Create combo boxes and update button
+        # Create combo boxes
         self.x_combo = QComboBox()
         self.y_combo = QComboBox()
         self.plot_type_combo = QComboBox()
         self.plot_type_combo.addItems(["Scatter", "Line", "Bar"])
-        self.update_button = QPushButton("Update Plot")
 
         # Set minimum width for combo boxes
         min_width = 150
@@ -68,21 +63,17 @@ class PlottingWidget(QWidget):
         combo_layout.addWidget(self.x_combo)
         combo_layout.addWidget(QLabel("Y-axis:"))
         combo_layout.addWidget(self.y_combo)
-        combo_layout.addWidget(self.update_button)
-        self.update_button.hide()  # Hide the update button as it's no longer needed
         combo_layout.setAlignment(Qt.AlignTop)
         combo_layout.setSpacing(10)
         self._layout.addLayout(combo_layout)
 
-        self.figure: Figure = Figure(figsize=(5, 4), dpi=100)
-        self.canvas: FigureCanvas = FigureCanvas(self.figure)  # type: ignore [no-untyped-call]
-        self._layout.addWidget(self.canvas)
+        # Create QChart and QChartView
+        self.chart = QChart()
+        self.chart_view = QChartView(self.chart)
+        self.chart_view.setRenderHint(QPainter.Antialiasing)
+        self._layout.addWidget(self.chart_view)
 
-        # Set Seaborn style
-        sns.set_theme(style="whitegrid")
-
-        # Connect update button and combo boxes to update_plot method
-        self.update_button.clicked.connect(self.update_plot)
+        # Connect combo boxes to update_plot method
         self.x_combo.currentIndexChanged.connect(self.update_plot)
         self.y_combo.currentIndexChanged.connect(self.update_plot)
         self.plot_type_combo.currentIndexChanged.connect(self.update_plot)
@@ -100,6 +91,7 @@ class PlottingWidget(QWidget):
     def set_data(self, data: pd.DataFrame) -> None:
         self.data = data
         self.set_columns(data.columns.tolist())
+        self.update_plot()
 
     def update_plot(self) -> None:
         if self.data is not None:
@@ -111,19 +103,38 @@ class PlottingWidget(QWidget):
         if self.data is None:
             return
 
-        self.figure.clear()
-        ax: Axes = self.figure.add_subplot(111)
+        self.chart.removeAllSeries()
+        self.chart.createDefaultAxes()
 
         plot_type = self.plot_type_combo.currentText()
 
         if plot_type == "Scatter":
-            sns.scatterplot(data=self.data, x=x_col, y=y_col, ax=ax)
+            series = QScatterSeries()
+            for x, y in zip(self.data[x_col], self.data[y_col]):
+                series.append(float(x), float(y))
+            self.chart.addSeries(series)
         elif plot_type == "Line":
-            sns.lineplot(data=self.data, x=x_col, y=y_col, ax=ax)
+            series = QLineSeries()
+            for x, y in zip(self.data[x_col], self.data[y_col]):
+                series.append(float(x), float(y))
+            self.chart.addSeries(series)
         elif plot_type == "Bar":
-            sns.barplot(data=self.data, x=x_col, y=y_col, ax=ax)
+            series = QBarSeries()
+            bar_set = QBarSet(y_col)
+            for y in self.data[y_col]:
+                bar_set.append(float(y))
+            series.append(bar_set)
+            self.chart.addSeries(series)
 
-        ax.set_title(f"{plot_type} Plot: {x_col} vs {y_col}")
-        ax.tick_params(axis='x', rotation=45)
-        self.figure.tight_layout()
-        self.canvas.draw_idle()  # type: ignore [no-untyped-call]
+        self.chart.setTitle(f"{plot_type} Plot: {x_col} vs {y_col}")
+        self.chart.createDefaultAxes()
+        x_axis = self.chart.axes(Qt.Horizontal)[0]
+        x_axis.setTitleText(x_col)
+        y_axis = self.chart.axes(Qt.Vertical)[0]
+        y_axis.setTitleText(y_col)
+
+        if plot_type == "Bar":
+            categories = [str(x) for x in self.data[x_col]]
+            x_axis.setCategories(categories)
+
+        self.chart_view.update()
