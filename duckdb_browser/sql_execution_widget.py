@@ -5,9 +5,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QTextEdit,
     QPushButton,
+    QCompleter,
 )
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QPalette, QFont
+from PySide6.QtCore import Qt, QStringListModel
+from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QPalette, QFont, QTextCursor
 from enum import Enum
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
@@ -60,17 +61,67 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
                 )
 
 
+class SQLCompleter(QCompleter):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setModel(QStringListModel())
+        self.setCompletionMode(QCompleter.PopupCompletion)
+        self.setCaseSensitivity(Qt.CaseInsensitive)
+
+    def update_completions(self, table_names):
+        completions = [
+            "SELECT", "FROM", "WHERE", "GROUP BY", "HAVING", "ORDER BY",
+            "INSERT INTO", "UPDATE", "DELETE", "CREATE TABLE", "ALTER TABLE",
+            "DROP TABLE", "JOIN", "INNER JOIN", "LEFT JOIN", "RIGHT JOIN"
+        ] + table_names
+        self.model().setStringList(completions)
+
 class SQLTextEdit(QTextEdit):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.highlighter = SQLSyntaxHighlighter(self)
         self.setPlaceholderText("Enter your SQL query here...")
+        self.completer = SQLCompleter(self)
+        self.completer.setWidget(self)
+        self.completer.activated.connect(self.insert_completion)
 
     def set_background_color(self, color: QColor) -> None:
         palette = self.palette()
         palette.setColor(QPalette.ColorRole.Base, color)
         self.setPalette(palette)
 
+    def keyPressEvent(self, event):
+        if self.completer.popup().isVisible():
+            if event.key() in (Qt.Key_Enter, Qt.Key_Return, Qt.Key_Tab, Qt.Key_Space):
+                event.ignore()
+                return
+        super().keyPressEvent(event)
+        
+        ctrl_or_shift = event.modifiers() & (Qt.ControlModifier | Qt.ShiftModifier)
+        if ctrl_or_shift and event.text() == '':
+            return
+
+        completion_prefix = self.text_under_cursor()
+        if completion_prefix != self.completer.completionPrefix():
+            self.completer.setCompletionPrefix(completion_prefix)
+            self.completer.popup().setCurrentIndex(self.completer.completionModel().index(0, 0))
+
+        cr = self.cursorRect()
+        cr.setWidth(self.completer.popup().sizeHintForColumn(0) + self.completer.popup().verticalScrollBar().sizeHint().width())
+        self.completer.complete(cr)
+
+    def text_under_cursor(self):
+        tc = self.textCursor()
+        tc.select(QTextCursor.WordUnderCursor)
+        return tc.selectedText()
+
+    def insert_completion(self, completion):
+        tc = self.textCursor()
+        extra = len(completion) - len(self.completer.completionPrefix())
+        tc.movePosition(QTextCursor.Left)
+        tc.movePosition(QTextCursor.EndOfWord)
+        tc.insertText(completion[-extra:])
+        self.setTextCursor(tc)
 
 class SQLExecutionWidget(QWidget):
     def __init__(
@@ -83,6 +134,7 @@ class SQLExecutionWidget(QWidget):
         self.text_edit: SQLTextEdit
         self.execute_button: QPushButton
         self.create_content()
+        self.update_completions()
 
     def create_content(self) -> None:
         # Create splitter
@@ -120,12 +172,18 @@ class SQLExecutionWidget(QWidget):
         query = self.text_edit.toPlainText()
         self.execute_sql(query)
 
+    def update_completions(self):
+        table_names = self.connection.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        table_names = [name[0] for name in table_names]
+        self.text_edit.completer.update_completions(table_names)
+
     def execute_sql(self, query: str) -> None:
         try:
             result = self.connection.execute(query)
             model = DuckDBTableModel(self.connection, "", result=result)
             self.table_widget.set_model(model)
             self.highlight_sql(success=True)
+            self.update_completions()  # Update completions after successful query execution
         except Exception as e:
             error_message = f"Error executing SQL: {str(e)}"
             self.table_widget.display_error(error_message)
