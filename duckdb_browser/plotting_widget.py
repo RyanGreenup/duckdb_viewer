@@ -28,7 +28,7 @@ from numpy.typing import NDArray
 from enum import Enum, auto
 from pandas import Series
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 # Custom type for the return value of _convert_to_numeric_or_categorical
 NumericOrCategoricalResult = Tuple[Series, Optional[List[str]]]
@@ -210,7 +210,11 @@ class PlottingWidget(QWidget):
         valid_data = valid_data.dropna()
 
         # Handle empty color column
-        if color_col == "None" or color_col not in valid_data.columns or valid_data['color'].empty:
+        if (
+            color_col == "None"
+            or color_col not in valid_data.columns
+            or valid_data["color"].empty
+        ):
             color_col = None
 
         match plot_type:
@@ -413,7 +417,7 @@ class PlottingWidget(QWidget):
         valid_data: pd.DataFrame,
         color_col: Optional[str],
         x_categories: Optional[List[str]],
-        y_categories: Optional[List[str]]
+        y_categories: Optional[List[str]],
     ) -> None:
         if x_axis is None or y_axis is None:
             return
