@@ -24,20 +24,22 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
 
     def generate_styles(self):
         styles = {}
-        styles[Token.Keyword] = self.format_for_token(Token.Keyword, '#007020', 'bold')
-        styles[Token.String] = self.format_for_token(Token.String, '#4070a0')
-        styles[Token.Number] = self.format_for_token(Token.Number, '#40a070')
-        styles[Token.Operator] = self.format_for_token(Token.Operator, '#666666')
-        styles[Token.Punctuation] = self.format_for_token(Token.Punctuation, '#666666')
-        styles[Token.Comment] = self.format_for_token(Token.Comment, '#60a0b0', 'italic')
+        styles[Token.Keyword] = self.format_for_token(Token.Keyword, "#007020", "bold")
+        styles[Token.String] = self.format_for_token(Token.String, "#4070a0")
+        styles[Token.Number] = self.format_for_token(Token.Number, "#40a070")
+        styles[Token.Operator] = self.format_for_token(Token.Operator, "#666666")
+        styles[Token.Punctuation] = self.format_for_token(Token.Punctuation, "#666666")
+        styles[Token.Comment] = self.format_for_token(
+            Token.Comment, "#60a0b0", "italic"
+        )
         return styles
 
     def format_for_token(self, token, color, font_style=None):
         text_format = QTextCharFormat()
         text_format.setForeground(QColor(color))
-        if font_style == 'bold':
+        if font_style == "bold":
             text_format.setFontWeight(QFont.Bold)
-        elif font_style == 'italic':
+        elif font_style == "italic":
             text_format.setFontItalic(True)
         return text_format
 
@@ -45,9 +47,7 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
         for token, value in lex(text, self.lexer):
             if token in self.styles:
                 self.setFormat(
-                    self.currentBlock().position(),
-                    len(value),
-                    self.styles[token]
+                    self.currentBlock().position(), len(value), self.styles[token]
                 )
 
 
