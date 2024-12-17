@@ -27,7 +27,6 @@ import numpy as np
 from typing import Optional, List, Tuple, Dict, Union, TypeVar, Any
 from numpy.typing import NDArray
 from enum import Enum, auto
-from pandas import Series
 
 T = TypeVar("T")
 DataType = Union[int, float, str]
@@ -35,7 +34,7 @@ DataType = Union[int, float, str]
 ChartAxis = Union[QValueAxis, QBarCategoryAxis]
 
 # Custom type for the return value of _convert_to_numeric_or_categorical
-NumericOrCategoricalResult = Tuple[pd.Series, Optional[List[str]]]
+NumericOrCategoricalResult = Tuple[pd.Series, Optional[List[str]]]  # type: ignore [type-arg]
 
 # Custom type for color map
 ColorMap = Dict[Union[str, float], QColor]
@@ -393,7 +392,7 @@ class PlottingWidget(QWidget):
             series.append(box_set)
             self.chart.addSeries(series)
 
-    def _create_box_set(self, data: pd.Series) -> QBoxSet:
+    def _create_box_set(self, data: pd.Series) -> QBoxSet:  # type: ignore [type-arg]
         q1 = float(np.percentile(data, 25))
         median = float(np.median(data))
         q3 = float(np.percentile(data, 75))
