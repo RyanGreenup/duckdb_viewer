@@ -439,7 +439,7 @@ class PlottingWidget(QWidget):
                 f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}"
                 for i in range(len(bin_edges) - 1)
             ]
-            self._set_categories(x_axis, categories)
+            self._set_categories(x_axis, [str(cat) for cat in categories])
         elif plot_type == PlotType.BOX_PLOT:
             x_axis.setTitleText(str(y_col))
             y_axis.setTitleText("Value")
@@ -452,9 +452,9 @@ class PlottingWidget(QWidget):
             self._set_categories(x_axis, categories)
         else:
             if x_categories:
-                self._set_categories(x_axis, x_categories)
+                self._set_categories(x_axis, [str(cat) for cat in x_categories])
             if y_categories:
-                self._set_categories(y_axis, y_categories)
+                self._set_categories(y_axis, [str(cat) for cat in y_categories])
 
         # Rotate x-axis labels by 45 degrees
         if isinstance(x_axis, QBarCategoryAxis):
@@ -463,7 +463,7 @@ class PlottingWidget(QWidget):
         # Add gap at the bottom for x-axis labels
         self.chart.layout().setContentsMargins(0, 0, 0, 40)
 
-    def _set_categories(self, axis, categories):
+    def _set_categories(self, axis: Union[QValueAxis, QBarCategoryAxis], categories: List[str]) -> None:
         if isinstance(axis, QValueAxis):
             new_axis = QBarCategoryAxis()
             new_axis.append(categories)
