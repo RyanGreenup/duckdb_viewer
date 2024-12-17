@@ -15,10 +15,36 @@ from PySide6.QtCore import (
     QSize,
     QAbstractItemModel,
     Signal,
+    QPoint,
 )
-from PySide6.QtGui import QFont, QColor, QPalette
+from PySide6.QtGui import QFont, QColor, QPalette, QCursor
 from PySide6.QtCore import Qt as QtCore
 from typing import List, Optional
+
+class CustomHeaderView(QHeaderView):
+    def __init__(self, orientation, parent=None):
+        super().__init__(orientation, parent)
+        self.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.setSectionsClickable(True)
+        self.setSectionsMovable(False)
+        self.setStretchLastSection(True)
+        self.setSectionResizeMode(QHeaderView.Interactive)
+
+    def mouseMoveEvent(self, event):
+        if self.cursor().shape() != Qt.SplitHCursor:
+            if self.isOnSectionResizeArea(event.position().toPoint()):
+                self.setCursor(Qt.SplitHCursor)
+            else:
+                self.setCursor(Qt.ArrowCursor)
+        super().mouseMoveEvent(event)
+
+    def isOnSectionResizeArea(self, pos):
+        visual_index = self.visualIndexAt(pos.x())
+        if visual_index == -1:
+            return False
+        left_edge = self.sectionViewportPosition(self.logicalIndex(visual_index))
+        right_edge = left_edge + self.sectionSize(self.logicalIndex(visual_index))
+        return abs(pos.x() - left_edge) <= 5 or abs(pos.x() - right_edge) <= 5  # Increased from 3 to 5
 
 class CustomLineEditStyle(QProxyStyle):
     def drawPrimitive(self, element, option, painter, widget=None):
@@ -99,7 +125,11 @@ class TableWidget(QWidget):
         self._main_layout.setSpacing(0)
         self.table_view = QTableView(self)
         self.table_view.setHorizontalScrollMode(QTableView.ScrollPerPixel)
-        self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        
+        # Use CustomHeaderView instead of default QHeaderView
+        self.custom_header = CustomHeaderView(Qt.Horizontal, self.table_view)
+        self.table_view.setHorizontalHeader(self.custom_header)
+        
         self.table_view.verticalHeader().setVisible(False)  # Hide vertical header
         self._main_layout.addWidget(self.table_view)
         self.header_widgets: List[CustomHeaderWidget] = []
