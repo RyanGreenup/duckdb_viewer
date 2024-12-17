@@ -23,7 +23,7 @@ from view_table import TableWidget
 from model_table import DuckDBTableModel
 from model_sidebar_list import TableListModel
 from sql_execution_widget import SQLExecutionWidget
-from utils_get_schema import get_complete_schema
+from utils_get_schema import get_complete_schema, generate_create_table_statements
 
 
 class MainWindow(QMainWindow):
@@ -247,6 +247,9 @@ class MainWindow(QMainWindow):
         show_schema_action = file_menu.addAction("Show &Schema")
         show_schema_action.triggered.connect(self.show_schema)
 
+        show_sql_schema_action = file_menu.addAction("Show &SQL Schema")
+        show_sql_schema_action.triggered.connect(self.show_sql_schema)
+
         exit_action = file_menu.addAction("E&xit")
         exit_action.triggered.connect(self.close)
 
@@ -314,6 +317,27 @@ class MainWindow(QMainWindow):
 
         text_edit = QTextEdit()
         text_edit.setPlainText(schema_str)
+        text_edit.setReadOnly(True)
+
+        schema_dialog.layout().addWidget(text_edit, 1, 0, 1, schema_dialog.layout().columnCount())
+        schema_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
+
+        schema_dialog.exec()
+
+    def show_sql_schema(self) -> None:
+        if not self.con:
+            QMessageBox.warning(self, "No Database Open", "Please open a database before viewing the schema.")
+            return
+
+        schema = get_complete_schema(self.con)
+        create_statements = generate_create_table_statements(schema)
+
+        schema_dialog = QMessageBox(self)
+        schema_dialog.setWindowTitle("SQL Schema")
+        schema_dialog.setText("Here are the CREATE TABLE statements for the database:")
+
+        text_edit = QTextEdit()
+        text_edit.setPlainText("\n\n".join(create_statements))
         text_edit.setReadOnly(True)
 
         schema_dialog.layout().addWidget(text_edit, 1, 0, 1, schema_dialog.layout().columnCount())
