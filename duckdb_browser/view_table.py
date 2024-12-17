@@ -19,10 +19,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QFont, QColor, QPalette, QMouseEvent, QCursor
 from PySide6.QtCore import Qt as QtCore
-from typing import List, Optional, Union
-
-# Custom types
-QtAlignment = Union[Qt.AlignmentFlag, Qt.Alignment]
+from typing import List, Optional
 
 
 class CustomHeaderView(QHeaderView):
@@ -67,7 +64,7 @@ class CustomLineEditStyle(QProxyStyle):
             painter.save()
             painter.setPen(QColor("#ccc"))
             painter.setBrush(QColor("#f8f8f8"))
-            painter.drawRect(option.rect.adjusted(0, 0, -1, -1))
+            painter.drawRect(option.rect().adjusted(0, 0, -1, -1))
             painter.restore()
         else:
             super().drawPrimitive(element, option, painter, widget)
