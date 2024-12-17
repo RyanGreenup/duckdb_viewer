@@ -115,7 +115,9 @@ class PlottingWidget(QWidget):
         self.figure.clear()
         ax: Axes = self.figure.add_subplot(111)
 
-        plot_type: Literal["Scatter", "Line", "Bar"] = self.plot_type_combo.currentText()
+        plot_type: Literal["Scatter", "Line", "Bar"] = (
+            self.plot_type_combo.currentText()
+        )
 
         if plot_type == "Scatter":
             sns.scatterplot(data=self.data, x=x_col, y=y_col, ax=ax)
