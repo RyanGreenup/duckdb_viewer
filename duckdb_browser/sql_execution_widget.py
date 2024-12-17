@@ -26,7 +26,10 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
         html = highlight(text, self.lexer, self.formatter)
         cursor = QTextCursor(self.document())
         cursor.setPosition(self.currentBlock().position())
-        cursor.setPosition(self.currentBlock().position() + self.currentBlock().length(), QTextCursor.KeepAnchor)
+        cursor.setPosition(
+            self.currentBlock().position() + self.currentBlock().length(),
+            QTextCursor.KeepAnchor,
+        )
         cursor.insertHtml(html)
 
 
