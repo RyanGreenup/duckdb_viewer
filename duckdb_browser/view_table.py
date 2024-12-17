@@ -4,6 +4,8 @@ from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
     QHeaderView,
+    QHBoxLayout,
+    QLabel,
 )
 from PySide6.QtCore import (
     Qt,
@@ -11,6 +13,7 @@ from PySide6.QtCore import (
     QAbstractItemModel,
     Signal,
 )
+from PySide6.QtGui import QFont, QColor, QPalette
 from PySide6.QtCore import Qt as QtCore
 from typing import List, Optional
 
@@ -20,15 +23,52 @@ class CustomHeaderWidget(QWidget):
     def __init__(self, column: int, column_name: str, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.column = column
+        self.setAutoFillBackground(True)
+        
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(2)
         
+        # Add column name label
+        label = QLabel(column_name)
+        label.setAlignment(Qt.AlignCenter)
+        font = QFont()
+        font.setBold(True)
+        label.setFont(font)
+        layout.addWidget(label)
+        
+        # Create a horizontal layout for the filter input and icon
+        filter_layout = QHBoxLayout()
+        filter_layout.setContentsMargins(0, 0, 0, 0)
+        filter_layout.setSpacing(4)
+        
+        # Add filter icon (you can replace this with an actual icon)
+        filter_icon = QLabel("🔍")
+        filter_layout.addWidget(filter_icon)
+        
+        # Add filter input
         self.filter_input = QLineEdit()
-        self.filter_input.setPlaceholderText(f"Filter {column_name}")
+        self.filter_input.setPlaceholderText("Filter")
         self.filter_input.textChanged.connect(self.on_filter_changed)
+        self.style_filter_input()
+        filter_layout.addWidget(self.filter_input)
         
-        layout.addWidget(self.filter_input)
+        layout.addLayout(filter_layout)
+
+    def style_filter_input(self):
+        self.filter_input.setStyleSheet("""
+            QLineEdit {
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                padding: 2px 4px;
+                background-color: #f8f8f8;
+            }
+            QLineEdit:focus {
+                border-color: #66afe9;
+                outline: 0;
+                box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6);
+            }
+        """)
 
     def get_filter_input(self) -> QLineEdit:
         return self.filter_input
@@ -42,9 +82,12 @@ class TableWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self._main_layout = QVBoxLayout(self)
+        self._main_layout.setContentsMargins(0, 0, 0, 0)
+        self._main_layout.setSpacing(0)
         self.table_view = QTableView(self)
         self.table_view.setHorizontalScrollMode(QTableView.ScrollPerPixel)
         self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.table_view.verticalHeader().setVisible(False)  # Hide vertical header
         self._main_layout.addWidget(self.table_view)
         self.header_widgets: List[CustomHeaderWidget] = []
 
@@ -61,7 +104,12 @@ class TableWidget(QWidget):
             widget = CustomHeaderWidget(col, column_name)
             widget.filterChanged.connect(self.on_filter_changed)
             self.header_widgets.append(widget)
+            header.setSectionResizeMode(col, QHeaderView.Fixed)
+            header.setMinimumSectionSize(100)  # Set a minimum width for columns
             self.table_view.setIndexWidget(model.index(0, col), widget)
+        
+        # Adjust the height of the first row to accommodate the header widgets
+        self.table_view.setRowHeight(0, 60)
 
     def on_filter_changed(self, column: int, text: str) -> None:
         self.filterChanged.emit(column, text)
