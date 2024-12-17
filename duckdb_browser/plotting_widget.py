@@ -24,7 +24,7 @@ from PySide6.QtCharts import (
 from PySide6.QtGui import QColor
 import pandas as pd
 import numpy as np
-from typing import Optional, List, Tuple, Dict, Union, TypeVar, cast
+from typing import Optional, List, Tuple, Dict, Union, TypeVar
 from numpy.typing import NDArray
 from enum import Enum, auto
 from pandas import Series
@@ -441,7 +441,10 @@ class PlottingWidget(QWidget):
             x_axis.setTitleText(str(y_col))
             y_axis.setTitleText("Value")
             if color_col:
-                self._set_categories(x_axis, valid_data["color"].unique().tolist())
+                categories = [
+                    str(item) for item in valid_data["color"].unique().tolist()
+                ]
+                self._set_categories(x_axis, categories)
             else:
                 x_axis.setLabelsVisible(False)
         elif plot_type == PlotType.BAR:
