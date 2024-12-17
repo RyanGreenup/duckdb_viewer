@@ -13,30 +13,35 @@ from PySide6.QtCore import (
     Qt,
     QAbstractItemModel,
     Signal,
+    QPoint,
 )
-from PySide6.QtGui import QFont, QColor, QPalette
+from PySide6.QtGui import QFont, QColor, QPalette, QMouseEvent
 from PySide6.QtCore import Qt as QtCore
-from typing import List, Optional
+from typing import List, Optional, Union
+
+# Custom types
+QtAlignment = Union[Qt.AlignmentFlag, Qt.Alignment]
+QtCursor = Union[Qt.CursorShape, Qt.Cursor]
 
 
 class CustomHeaderView(QHeaderView):
-    def __init__(self, orientation, parent=None):
+    def __init__(self, orientation: Qt.Orientation, parent: Optional[QWidget] = None):
         super().__init__(orientation, parent)
-        self.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.setDefaultAlignment(QtAlignment(Qt.AlignLeft | Qt.AlignVCenter))
         self.setSectionsClickable(True)
         self.setSectionsMovable(False)
         self.setStretchLastSection(True)
-        self.setSectionResizeMode(QHeaderView.Interactive)
+        self.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
 
-    def mouseMoveEvent(self, event):
-        if self.cursor().shape() != Qt.SplitHCursor:
-            if self.isOnSectionResizeArea(event.position().toPoint()):
-                self.setCursor(Qt.SplitHCursor)
+    def mouseMoveEvent(self, e: QMouseEvent) -> None:
+        if self.cursor().shape() != QtCursor(Qt.SplitHCursor):
+            if self.isOnSectionResizeArea(e.position().toPoint()):
+                self.setCursor(QtCursor(Qt.SplitHCursor))
             else:
-                self.setCursor(Qt.ArrowCursor)
-        super().mouseMoveEvent(event)
+                self.setCursor(QtCursor(Qt.ArrowCursor))
+        super().mouseMoveEvent(e)
 
-    def isOnSectionResizeArea(self, pos):
+    def isOnSectionResizeArea(self, pos: QPoint) -> bool:
         visual_index = self.visualIndexAt(pos.x())
         if visual_index == -1:
             return False
@@ -127,10 +132,10 @@ class TableWidget(QWidget):
         self._main_layout.setContentsMargins(0, 0, 0, 0)
         self._main_layout.setSpacing(0)
         self.table_view = QTableView(self)
-        self.table_view.setHorizontalScrollMode(QTableView.ScrollPerPixel)
+        self.table_view.setHorizontalScrollMode(QTableView.ScrollMode.ScrollPerPixel)
 
         # Use CustomHeaderView instead of default QHeaderView
-        self.custom_header = CustomHeaderView(Qt.Horizontal, self.table_view)
+        self.custom_header = CustomHeaderView(Qt.Orientation.Horizontal, self.table_view)
         self.table_view.setHorizontalHeader(self.custom_header)
 
         self.table_view.verticalHeader().setVisible(False)  # Hide vertical header
@@ -150,7 +155,7 @@ class TableWidget(QWidget):
             widget = CustomHeaderWidget(col, column_name)
             widget.filterChanged.connect(self.on_filter_changed)
             self.header_widgets.append(widget)
-            header.setSectionResizeMode(col, QHeaderView.Interactive)  # Allow resizing
+            header.setSectionResizeMode(col, QHeaderView.ResizeMode.Interactive)  # Allow resizing
             header.setMinimumSectionSize(100)  # Set a minimum width for columns
             self.table_view.setIndexWidget(model.index(0, col), widget)
 
@@ -169,7 +174,7 @@ class TableWidget(QWidget):
         for col in range(self.table_view.model().columnCount()):
             width = self.calculate_column_width(col)
             header.resizeSection(col, width)
-            header.setSectionResizeMode(col, QHeaderView.Interactive)  # Allow resizing
+            header.setSectionResizeMode(col, QHeaderView.ResizeMode.Interactive)  # Allow resizing
         self.table_view.setColumnHidden(0, False)  # Ensure the first column is visible
 
     def calculate_column_width(self, column: int) -> int:
