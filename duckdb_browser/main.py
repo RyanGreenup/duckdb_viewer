@@ -1,58 +1,53 @@
 #!/usr/bin/env python
 import sys
-from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QApplication, QMainWindow, QTableView
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
 import duckdb
 from duckdb import DuckDBPyConnection
-from typing import Optional
+from typing import Optional, Any, List, Union
 import typer
+import pandas as pd
 
+# Custom type for our data
+DataType = List[List[Any]]
 
 class DuckDBTableModel(QAbstractTableModel):
     def __init__(self, connection: DuckDBPyConnection, table_name: str):
         super().__init__()
         self.connection = connection
         self.table_name = table_name
-        self.data = self._fetch_data()
-        self.headers = self.data.columns.tolist()
+        self._data: DataType = []
+        self.headers: List[str] = []
+        self._fetch_data()
 
-    def _fetch_data(self):
+    def _fetch_data(self) -> None:
         query = f"SELECT * FROM {self.table_name}"
-        return self.connection.execute(query).df()
+        df: pd.DataFrame = self.connection.execute(query).df()
+        self._data = df.values.tolist()
+        self.headers = df.columns.tolist()
 
-    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
-        return len(self.data)
+    def rowCount(self, parent: Union[QModelIndex, None] = None) -> int:
+        return len(self._data)
 
-    def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:
+    def columnCount(self, parent: Union[QModelIndex, None] = None) -> int:
         return len(self.headers)
 
-    def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = Qt.DisplayRole
-    ) -> Optional[str]:
-        if role == Qt.DisplayRole:
-            return str(self.data.iloc[index.row(), index.column()])
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            return str(self._data[index.row()][index.column()])
         return None
 
-    def headerData(
-        self,
-        section: int,
-        orientation: Qt.Orientation,
-        role: Qt.ItemDataRole = Qt.DisplayRole,
-    ) -> Optional[str]:
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return self.headers[section]
         return None
 
-    def setData(
-        self, index: QModelIndex, value: any, role: Qt.ItemDataRole = Qt.EditRole
-    ) -> bool:
-        if role == Qt.EditRole:
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.ItemDataRole.EditRole) -> bool:
+        if role == Qt.ItemDataRole.EditRole:
             row = index.row()
             col = index.column()
             column_name = self.headers[col]
-            # old_value = self.data.iloc[row, col]  # Removed unused variable
-            self.data.iloc[row, col] = value
+            self._data[row][col] = value
 
             # Update the database
             update_query = f"""
@@ -60,14 +55,14 @@ class DuckDBTableModel(QAbstractTableModel):
             SET {column_name} = ?
             WHERE id = ?
             """
-            self.connection.execute(update_query, [value, self.data.iloc[row, 0]])
+            self.connection.execute(update_query, [value, self._data[row][0]])
 
             self.dataChanged.emit(index, index, [role])
             return True
         return False
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-        return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
+        return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable
 
 
 def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
@@ -98,19 +93,8 @@ class MainWindow(QMainWindow):
         # Connect to DuckDB
         self.con = create_connection(db_path=db_path)
 
-        # Fetch data from DuckDB
-        query = duckdb.sql("SELECT * FROM test", connection=self.con)
-        results = query.fetchall()
-
-        # Create a QStandardItemModel and populate it with the fetched data
-        self.model = QStandardItemModel()
-        self.model.setColumnCount(2)  # ID and Name columns
-        self.model.setHorizontalHeaderLabels(["ID", "Name"])
-
-        for row in results:
-            id_item = QStandardItem(str(row[0]))
-            name_item = QStandardItem(row[1])
-            self.model.appendRow([id_item, name_item])
+        # Create and set the model
+        self.model = DuckDBTableModel(self.con, "test")
 
         # Create a QTableView and set the model
         self.view = QTableView(self)
