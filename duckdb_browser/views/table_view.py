@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import (
     Qt,
 )
+from typing import Optional, List
+from models.table import DuckDBTableModel
 
 
 
@@ -122,10 +124,6 @@ class TableWidget(QWidget):
     def get_main_layout(self):
         return self._main_layout
 
-from typing import Optional, List
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QLineEdit
-from PySide6.QtCore import Qt
-from models.table import DuckDBTableModel
 
 class TableWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
