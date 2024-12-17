@@ -14,9 +14,10 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QFileDialog,
     QTextEdit,
+    QGridLayout,
 )
-from typing import List, Optional, Callable
-from PySide6.QtCore import Qt, QModelIndex, Signal
+from typing import List, Optional, Callable, Union
+from PySide6.QtCore import Qt, QModelIndex, Signal, QObject
 import duckdb
 from duckdb import DuckDBPyConnection
 from view_table import TableWidget
@@ -319,7 +320,9 @@ class MainWindow(QMainWindow):
         text_edit.setPlainText(schema_str)
         text_edit.setReadOnly(True)
 
-        schema_dialog.layout().addWidget(text_edit, 1, 0, 1, schema_dialog.layout().columnCount())
+        layout = schema_dialog.layout()
+        if isinstance(layout, QGridLayout):
+            layout.addWidget(text_edit, 1, 0, 1, layout.columnCount())
         schema_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
 
         schema_dialog.exec()
@@ -340,7 +343,9 @@ class MainWindow(QMainWindow):
         text_edit.setPlainText("\n\n".join(create_statements))
         text_edit.setReadOnly(True)
 
-        schema_dialog.layout().addWidget(text_edit, 1, 0, 1, schema_dialog.layout().columnCount())
+        layout = schema_dialog.layout()
+        if isinstance(layout, QGridLayout):
+            layout.addWidget(text_edit, 1, 0, 1, layout.columnCount())
         schema_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
 
         schema_dialog.exec()
