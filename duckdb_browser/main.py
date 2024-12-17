@@ -134,7 +134,7 @@ class TableListModel(QAbstractItemModel):
             return self.createIndex(row, column, child_item)
         return QModelIndex()
 
-    def parent(self, index: Union[QModelIndex, QPersistentModelIndex]) -> QModelIndex:  # type:ignore [fn_QModelIndex.parent]
+    def parent(self, index: Union[QModelIndex, QPersistentModelIndex]) -> QModelIndex:  # type: ignore [fn_QModelIndex.parent]
         if not index.isValid():
             return QModelIndex()
 
