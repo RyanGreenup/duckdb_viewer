@@ -186,7 +186,9 @@ class MainWindow(QMainWindow):
         # Update the main layout
         self.table_widget.get_main_layout().update()
 
-        self.statusBar.showMessage(f"Loaded {name} with {self.table_model.rowCount()} rows")
+        self.statusBar.showMessage(
+            f"Loaded {name} with {self.table_model.rowCount()} rows"
+        )
 
     def calculate_column_width(self, column: int) -> int:
         font_metrics = self.table_widget.table_view.fontMetrics()
@@ -214,7 +216,9 @@ class MainWindow(QMainWindow):
         self.table_model.set_filter(column, text)
         filtered_row_count = self.table_model.rowCount()
         total_row_count = self.table_model.get_total_row_count()
-        self.statusBar.showMessage(f"Showing {filtered_row_count} of {total_row_count} rows")
+        self.statusBar.showMessage(
+            f"Showing {filtered_row_count} of {total_row_count} rows"
+        )
 
     def create_menu_bar(self) -> None:
         menu_bar = QMenuBar(self)
@@ -254,7 +258,7 @@ class MainWindow(QMainWindow):
         QMessageBox.about(
             self,
             "About DuckDB Browser",
-            "DuckDB Browser is a simple GUI for browsing DuckDB databases."
+            "DuckDB Browser is a simple GUI for browsing DuckDB databases.",
         )
 
 
