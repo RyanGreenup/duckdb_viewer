@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QStringListModel
 from PySide6.QtCore import QAbstractItemModel
+from PySide6.QtGui import QKeyEvent
 from PySide6.QtGui import (
     QColor,
     QSyntaxHighlighter,
@@ -95,14 +96,17 @@ class SQLCompleter(QCompleter):
             "LEFT JOIN",
             "RIGHT JOIN",
         ] + table_names
-        if isinstance(self.model(), QStringListModel):
-            self.model().setStringList(completions)
+        model = self.model()
+        if isinstance(model, QStringListModel):
+            model.setStringList(completions)
         else:
             new_model = QStringListModel(completions)
             self.setModel(new_model)
 
     def model(self) -> QAbstractItemModel:
-        return super().model()
+        model = super().model()
+        assert isinstance(model, QAbstractItemModel)
+        return model
 
 
 class SQLTextEdit(QTextEdit):
@@ -119,23 +123,23 @@ class SQLTextEdit(QTextEdit):
         palette.setColor(QPalette.ColorRole.Base, color)
         self.setPalette(palette)
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, e: QKeyEvent) -> None:
         if self.completer.popup().isVisible():
-            if event.key() in (Qt.Key_Enter, Qt.Key_Return, Qt.Key_Tab):
-                event.ignore()
+            if e.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return, Qt.Key.Key_Tab):
+                e.ignore()
                 return
-            elif event.key() == Qt.Key_N and event.modifiers() & Qt.ControlModifier:
+            elif e.key() == Qt.Key.Key_N and e.modifiers() & Qt.KeyboardModifier.ControlModifier:
                 self.completer.setCurrentRow(self.completer.currentRow() + 1)
                 self.completer.popup().setCurrentIndex(self.completer.currentIndex())
-                event.accept()
+                e.accept()
                 return
-            elif event.key() == Qt.Key_P and event.modifiers() & Qt.ControlModifier:
+            elif e.key() == Qt.Key.Key_P and e.modifiers() & Qt.KeyboardModifier.ControlModifier:
                 self.completer.setCurrentRow(self.completer.currentRow() - 1)
                 self.completer.popup().setCurrentIndex(self.completer.currentIndex())
-                event.accept()
+                e.accept()
                 return
 
-        super().keyPressEvent(event)
+        super().keyPressEvent(e)
 
         ctrl_or_shift = event.modifiers() & (Qt.ControlModifier | Qt.ShiftModifier)
         if ctrl_or_shift and event.text() == "":
