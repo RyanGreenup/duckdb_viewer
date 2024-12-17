@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QHeaderView,
 )
+from typing import List, Optional
 from PySide6.QtCore import (
     QPersistentModelIndex,
     Qt,
@@ -204,6 +205,29 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
     return con
 
 
+class TableWidget(QWidget):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.layout = QVBoxLayout(self)
+        self.filter_widget = QWidget(self)
+        self.filter_layout = QHBoxLayout(self.filter_widget)
+        self.filter_layout.setContentsMargins(0, 0, 0, 0)
+        self.table_view = QTableView(self)
+        self.layout.addWidget(self.filter_widget)
+        self.layout.addWidget(self.table_view)
+
+    def clear_filters(self) -> None:
+        while self.filter_layout.count():
+            item = self.filter_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+    def add_filter(self, placeholder: str) -> QLineEdit:
+        line_edit = QLineEdit(self.filter_widget)
+        line_edit.setPlaceholderText(placeholder)
+        self.filter_layout.addWidget(line_edit)
+        return line_edit
+
 class MainWindow(QMainWindow):
     def __init__(
         self,
@@ -230,28 +254,13 @@ class MainWindow(QMainWindow):
         self.sidebar.setHeaderHidden(True)
         self.sidebar.clicked.connect(self.on_sidebar_clicked)
 
-        # Create and set up the table view
-        self.table_view = QTableView()
-        self.table_view.setSortingEnabled(True)
-
-        # Create a widget to hold the table view and filter inputs
-        table_widget = QWidget()
-        table_layout = QVBoxLayout(table_widget)
-
-        # Create a widget for filter inputs
-        filter_widget = QWidget()
-        filter_layout = QHBoxLayout(filter_widget)
-        filter_layout.setContentsMargins(0, 0, 0, 0)
-
-        self.filter_inputs: List[QLineEdit] = []
-
-        # Add filter widget and table view to the table layout
-        table_layout.addWidget(filter_widget)
-        table_layout.addWidget(self.table_view)
+        # Create and set up the table widget
+        self.table_widget = TableWidget()
+        self.table_widget.table_view.setSortingEnabled(True)
 
         # Add views to splitter
         splitter.addWidget(self.sidebar)
-        splitter.addWidget(table_widget)
+        splitter.addWidget(self.table_widget)
 
         # Set splitter sizes
         splitter.setSizes([200, 600])  # Adjust these values as needed
@@ -261,6 +270,9 @@ class MainWindow(QMainWindow):
 
         # Set central widget
         self.setCentralWidget(main_widget)
+
+        # Initialize filter inputs list
+        self.filter_inputs: List[QLineEdit] = []
 
         # Load the specified table or the first table if it exists
         self.load_initial_table(initial_table)
@@ -297,29 +309,24 @@ class MainWindow(QMainWindow):
     def on_sidebar_clicked(self, index: QModelIndex) -> None:
         table_name = self.sidebar_model.data(index, Qt.ItemDataRole.DisplayRole)
         self.table_model = DuckDBTableModel(self.con, table_name)
-        self.table_view.setModel(self.table_model)
+        self.table_widget.table_view.setModel(self.table_model)
         self.sidebar.setCurrentIndex(index)
 
         # Clear existing filter inputs
-        for input in self.filter_inputs:
-            input.deleteLater()
+        self.table_widget.clear_filters()
         self.filter_inputs.clear()
 
         # Create new filter inputs
-        filter_layout = self.table_view.parent().layout().itemAt(0).widget().layout()
         for col in range(self.table_model.columnCount()):
-            line_edit = QLineEdit()
-            line_edit.setPlaceholderText(
-                f"Filter {self.table_model.headerData(col, Qt.Orientation.Horizontal)}"
-            )
+            placeholder = f"Filter {self.table_model.headerData(col, Qt.Orientation.Horizontal)}"
+            line_edit = self.table_widget.add_filter(placeholder)
             line_edit.textChanged.connect(
                 lambda text, column=col: self.apply_filter(text, column)
             )
-            filter_layout.addWidget(line_edit)
             self.filter_inputs.append(line_edit)
 
         # Adjust column widths
-        header = self.table_view.horizontalHeader()
+        header = self.table_widget.table_view.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def apply_filter(self, text: str, column: int) -> None:
