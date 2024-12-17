@@ -24,7 +24,7 @@ class DuckDBTableModel(QAbstractTableModel):
         self._sort_order = Qt.SortOrder.AscendingOrder
         self._filters: List[str] = []
         self._filtered_data: DataType = []
-        
+
         if table_name:
             self._fetch_data()
 
@@ -45,11 +45,11 @@ class DuckDBTableModel(QAbstractTableModel):
         self.layoutAboutToBeChanged.emit()
         # Fetch column names and types
         self.headers = [(col[0], str(col[1])) for col in result.description]
-        
+
         # Fetch data
         self._data = result.fetchall()
         self._filtered_data = self._data
-        
+
         # Initialize filters
         self._filters = [""] * len(self.headers)
         self.layoutChanged.emit()
