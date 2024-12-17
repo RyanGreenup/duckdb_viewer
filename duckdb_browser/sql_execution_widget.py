@@ -1,3 +1,4 @@
+from typing import Optional
 from PySide6.QtWidgets import (
     QWidget,
     QSplitter,
@@ -12,10 +13,13 @@ from model_table import DuckDBTableModel
 
 
 class SQLExecutionWidget(QWidget):
-    def __init__(self, connection: DuckDBPyConnection, parent: QWidget = None):
+    def __init__(self, connection: DuckDBPyConnection, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.connection = connection
-        self.layout = QVBoxLayout(self)
+        self.connection: DuckDBPyConnection = connection
+        self.main_layout: QVBoxLayout = QVBoxLayout(self)
+        self.table_widget: TableWidget
+        self.text_edit: QPlainTextEdit
+        self.execute_button: QPushButton
         self.create_content()
 
     def create_content(self) -> None:
@@ -49,7 +53,7 @@ class SQLExecutionWidget(QWidget):
         splitter.setHandleWidth(20)
 
         # Add splitter to layout
-        self.layout.addWidget(splitter)
+        self.main_layout.addWidget(splitter)
 
     def on_execute_clicked(self) -> None:
         query = self.text_edit.toPlainText()
