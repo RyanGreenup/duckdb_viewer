@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet, QValueAxis, QBoxPlotSeries, QBoxSet
+from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet, QValueAxis, QBoxPlotSeries, QBoxSet, QBarCategoryAxis
 from PySide6.QtGui import QPainter, QColor
 import pandas as pd
 import numpy as np
@@ -138,7 +138,7 @@ class PlottingWidget(QWidget):
         valid_data = valid_data.dropna()
 
         # Handle empty color column
-        if color_col == "None" or valid_data['color'].empty:
+        if color_col == "None" or (color_col in valid_data and valid_data['color'].empty):
             color_col = None
 
         match plot_type:
@@ -280,26 +280,35 @@ class PlottingWidget(QWidget):
         return {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
 
     def _set_axis_labels(self, x_axis, y_axis, plot_type, x_col, y_col, valid_data, color_col, x_categories, y_categories):
+        x_axis.setTitleText(str(x_col))
+        y_axis.setTitleText(str(y_col))
+
         if plot_type == PlotType.HISTOGRAM:
             x_axis.setTitleText("Bins")
             y_axis.setTitleText("Frequency")
             _, bin_edges = np.histogram(valid_data['x'], bins='auto')
             categories = [f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}" for i in range(len(bin_edges)-1)]
-            x_axis.setCategories(categories)
+            self._set_categories(x_axis, categories)
         elif plot_type == PlotType.BOX_PLOT:
             x_axis.setTitleText(str(y_col))
             y_axis.setTitleText("Value")
-            if color_col != "None":
-                x_axis.setCategories(valid_data['color'].unique())
+            if color_col:
+                self._set_categories(x_axis, valid_data['color'].unique())
             else:
                 x_axis.setLabelsVisible(False)
+        elif plot_type == PlotType.BAR:
+            categories = [str(x) for x in valid_data['x']]
+            self._set_categories(x_axis, categories)
         else:
-            x_axis.setTitleText(str(x_col))
-            y_axis.setTitleText(str(y_col))
             if x_categories:
-                x_axis.setCategories(x_categories)
+                self._set_categories(x_axis, x_categories)
             if y_categories:
-                y_axis.setCategories(y_categories)
-            if plot_type == PlotType.BAR:
-                categories = [str(x) for x in valid_data['x']]
-                x_axis.setCategories(categories)
+                self._set_categories(y_axis, y_categories)
+
+    def _set_categories(self, axis, categories):
+        if isinstance(axis, QValueAxis):
+            new_axis = QBarCategoryAxis()
+            new_axis.append(categories)
+            self.chart.setAxisX(new_axis, self.chart.series()[0])
+        else:
+            axis.setCategories(categories)
