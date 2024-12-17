@@ -1,12 +1,6 @@
 # Features to Implement
 
 ## Required Features
-
-- Double click to set column width
-- Horizontal scroll should be impleemented in the Execute SQL Tab
-    - Make this a part of the Table view widget
-- User should be able to filter in the Execute SQL tab
-
 ## Nice Fetures
 
 - Allow the user to create plots from the data
@@ -41,9 +35,13 @@
 ## Table
 
 - Drag to make table wider
+- Double click to set column width
+- Horizontal scroll should be impleemented in the Execute SQL Tab
+    - Make this a part of the Table view widget
 ### Filtering
 
 - Fix filtering
     - When the user begins filtering, the horizontal scroll is lost and the table is not displayed correctly.
 - Get Schema to clipboard command
     - Keybidning
+- User should be able to filter in the Execute SQL tab
