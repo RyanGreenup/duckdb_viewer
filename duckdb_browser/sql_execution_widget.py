@@ -17,15 +17,16 @@ from pygments.formatters import HtmlFormatter
 
 
 class SQLSyntaxHighlighter(QSyntaxHighlighter):
-    def __init__(self, parent):
+    def __init__(self, parent: QTextDocument):
         super().__init__(parent)
         self.lexer = SqlLexer()
         self.formatter = HtmlFormatter(style="default")
 
-    def highlightBlock(self, text):
+    def highlightBlock(self, text: str) -> None:
         html = highlight(text, self.lexer, self.formatter)
         cursor = QTextCursor(self.document())
-        cursor.select(QTextCursor.BlockUnderCursor)
+        cursor.setPosition(self.currentBlock().position())
+        cursor.setPosition(self.currentBlock().position() + self.currentBlock().length(), QTextCursor.KeepAnchor)
         cursor.insertHtml(html)
 
 
