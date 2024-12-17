@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QSizePolicy,
 )
-from PySide6.QtCore import Qt, QPointF
+from PySide6.QtCore import Qt, QPointF, QObject
 from PySide6.QtGui import QPainter
 from PySide6.QtCharts import (
     QChart,
@@ -29,12 +29,12 @@ from enum import Enum, auto
 
 
 class CustomToolTip(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.setWindowFlags(Qt.ToolTip)
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(10, 10, 10, 10)
+        self.setWindowFlags(Qt.WindowType.ToolTip)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self._layout = QVBoxLayout(self)
+        self._layout.setContentsMargins(10, 10, 10, 10)
         self.label = QLabel(self)
         self.label.setStyleSheet("""
             QLabel {
@@ -45,13 +45,13 @@ class CustomToolTip(QWidget):
                 font-size: 12px;
             }
         """)
-        self.layout.addWidget(self.label)
+        self._layout.addWidget(self.label)
 
-    def show_tooltip(self, text, pos):
+    def show_tooltip(self, text: str, pos: QPointF) -> None:
         self.label.setText(text)
         self.adjustSize()
         super().show()
-        self.move(pos)
+        self.move(pos.toPoint())
 
 
 class PlotType(Enum):
