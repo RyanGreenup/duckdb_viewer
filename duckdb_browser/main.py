@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QHeaderView,
 )
-from typing import List, Optional
+from typing import List, Optional, Union
 from PySide6.QtCore import (
     QPersistentModelIndex,
     Qt,
@@ -81,16 +81,16 @@ class TableListModel(QAbstractItemModel):
                 )
                 item.add_child(column_item)
 
-    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
+    def rowCount(self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()) -> int:
         if parent.isValid():
             item = parent.internalPointer()
             return item.child_count()
         return self.root.child_count()
 
-    def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:
+    def columnCount(self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()) -> int:
         return 1
 
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+    def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int = Qt.DisplayRole) -> Any:
         if not index.isValid():
             return None
 
@@ -104,7 +104,7 @@ class TableListModel(QAbstractItemModel):
         return None
 
     def index(
-        self, row: int, column: int, parent: QModelIndex = QModelIndex()
+        self, row: int, column: int, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
     ) -> QModelIndex:
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
@@ -119,7 +119,7 @@ class TableListModel(QAbstractItemModel):
             return self.createIndex(row, column, child_item)
         return QModelIndex()
 
-    def parent(self, index: QModelIndex) -> QModelIndex:
+    def parent(self, index: Union[QModelIndex, QPersistentModelIndex]) -> QModelIndex:
         if not index.isValid():
             return QModelIndex()
 
@@ -131,7 +131,7 @@ class TableListModel(QAbstractItemModel):
 
         return self.createIndex(parent_item.row(), 0, parent_item)
 
-    def get_item_info(self, index: QModelIndex) -> Tuple[str, str, Optional[str]]:
+    def get_item_info(self, index: Union[QModelIndex, QPersistentModelIndex]) -> Tuple[str, str, Optional[str]]:
         item = index.internalPointer()
         if item.type == "column":
             table_name = item.parent.name
