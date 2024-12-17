@@ -20,10 +20,10 @@ from PySide6.QtCore import (
     QModelIndex,
     QAbstractItemModel,
 )
-from typing import Any, List, Optional, Tuple
+from typing import Any, Tuple
 import duckdb
 from duckdb import DuckDBPyConnection
-from typing import Any, Union
+from typing import Union
 import typer
 import pandas as pd
 
@@ -32,13 +32,15 @@ DataType = List[List[Any]]
 
 
 class DatabaseItem:
-    def __init__(self, name: str, item_type: str, parent: Optional['DatabaseItem'] = None):
+    def __init__(
+        self, name: str, item_type: str, parent: Optional["DatabaseItem"] = None
+    ):
         self.name = name
         self.type = item_type
         self.parent = parent
-        self.children: List['DatabaseItem'] = []
+        self.children: List["DatabaseItem"] = []
 
-    def add_child(self, child: 'DatabaseItem') -> None:
+    def add_child(self, child: "DatabaseItem") -> None:
         self.children.append(child)
 
     def child_count(self) -> int:
@@ -48,6 +50,7 @@ class DatabaseItem:
         if self.parent:
             return self.parent.children.index(self)
         return 0
+
 
 class TableListModel(QAbstractItemModel):
     def __init__(self, connection: DuckDBPyConnection):
@@ -73,7 +76,9 @@ class TableListModel(QAbstractItemModel):
             for column_info in self.connection.execute(columns_query).fetchall():
                 column_name = column_info[1]
                 column_type = column_info[2]
-                column_item = DatabaseItem(f"{column_name} ({column_type})", "column", item)
+                column_item = DatabaseItem(
+                    f"{column_name} ({column_type})", "column", item
+                )
                 item.add_child(column_item)
 
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
@@ -98,7 +103,9 @@ class TableListModel(QAbstractItemModel):
 
         return None
 
-    def index(self, row: int, column: int, parent: QModelIndex = QModelIndex()) -> QModelIndex:
+    def index(
+        self, row: int, column: int, parent: QModelIndex = QModelIndex()
+    ) -> QModelIndex:
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
 
@@ -375,9 +382,9 @@ class MainWindow(QMainWindow):
     def on_sidebar_clicked(self, index: QModelIndex) -> None:
         item_type, item_name, column_name = self.sidebar_model.get_item_info(index)
 
-        if item_type in ('table', 'view'):
+        if item_type in ("table", "view"):
             self.load_table_or_view(item_name)
-        elif item_type == 'column':
+        elif item_type == "column":
             self.load_table_or_view(item_name, focus_column=column_name)
 
     def load_table_or_view(self, name: str, focus_column: Optional[str] = None) -> None:
