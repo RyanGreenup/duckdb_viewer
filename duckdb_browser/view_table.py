@@ -135,7 +135,9 @@ class TableWidget(QWidget):
         self.table_view.setHorizontalScrollMode(QTableView.ScrollMode.ScrollPerPixel)
 
         # Use CustomHeaderView instead of default QHeaderView
-        self.custom_header = CustomHeaderView(Qt.Orientation.Horizontal, self.table_view)
+        self.custom_header = CustomHeaderView(
+            Qt.Orientation.Horizontal, self.table_view
+        )
         self.table_view.setHorizontalHeader(self.custom_header)
 
         self.table_view.verticalHeader().setVisible(False)  # Hide vertical header
@@ -155,7 +157,9 @@ class TableWidget(QWidget):
             widget = CustomHeaderWidget(col, column_name)
             widget.filterChanged.connect(self.on_filter_changed)
             self.header_widgets.append(widget)
-            header.setSectionResizeMode(col, QHeaderView.ResizeMode.Interactive)  # Allow resizing
+            header.setSectionResizeMode(
+                col, QHeaderView.ResizeMode.Interactive
+            )  # Allow resizing
             header.setMinimumSectionSize(100)  # Set a minimum width for columns
             self.table_view.setIndexWidget(model.index(0, col), widget)
 
@@ -174,7 +178,9 @@ class TableWidget(QWidget):
         for col in range(self.table_view.model().columnCount()):
             width = self.calculate_column_width(col)
             header.resizeSection(col, width)
-            header.setSectionResizeMode(col, QHeaderView.ResizeMode.Interactive)  # Allow resizing
+            header.setSectionResizeMode(
+                col, QHeaderView.ResizeMode.Interactive
+            )  # Allow resizing
         self.table_view.setColumnHidden(0, False)  # Ensure the first column is visible
 
     def calculate_column_width(self, column: int) -> int:
