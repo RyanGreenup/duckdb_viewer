@@ -62,14 +62,13 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
         return text_format
 
     def highlightBlock(self, text: str) -> None:
-        for token_type, value in lex(text, self.lexer):
-            token_str = str(token_type)
-            if token_str.split(".")[-1] in self.styles:
-                self.setFormat(
-                    self.currentBlock().position(),
-                    len(value),
-                    self.styles[token_str.split(".")[-1]],
-                )
+        for token, value in lex(text, self.lexer):
+            token_str = str(token)
+            style_key = token_str.split('.')[-1]
+            if style_key in self.styles:
+                start = self.currentBlock().position()
+                length = len(value)
+                self.setFormat(start, length, self.styles[style_key])
 
 
 class SQLCompleter(QCompleter):
@@ -119,6 +118,10 @@ class SQLTextEdit(QTextEdit):
         self.completer = SQLCompleter(self)
         self.completer.setWidget(self)
         self.completer.activated.connect(self.insert_completion)
+
+    def setDocument(self, document):
+        super().setDocument(document)
+        self.highlighter.setDocument(document)
 
     def set_background_color(self, color: QColor) -> None:
         palette = self.palette()
