@@ -10,7 +10,7 @@ from PySide6.QtCore import (
     QSize,
     QAbstractItemModel,
 )
-from typing import List, Optional, Union
+from typing import List, Optional
 
 
 class FilterHeader(QHeaderView):
