@@ -34,7 +34,7 @@ T = TypeVar("T")
 ChartAxis = Union[QValueAxis, QBarCategoryAxis]
 
 # Custom type for the return value of _convert_to_numeric_or_categorical
-NumericOrCategoricalResult = Tuple[Series, Optional[List[str]]]
+NumericOrCategoricalResult = Tuple[Series[Union[int, float]], Optional[List[str]]]
 
 
 class CustomToolTip(QWidget):
@@ -258,7 +258,7 @@ class PlottingWidget(QWidget):
 
     def _convert_to_numeric_or_categorical(
         self, data: pd.Series
-    ) -> Tuple[pd.Series[Union[int, float]], Optional[List[str]]]:
+    ) -> NumericOrCategoricalResult:
         if data.dtype == "object":
             categories = data.unique().tolist()
             return pd.Series(pd.Categorical(data).codes, dtype=int), categories  # type: ignore
