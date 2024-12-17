@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QPushButton,
     QCompleter,
+    QHBoxLayout,
 )
 from PySide6.QtCore import Qt
 from utils_get_schema import get_complete_schema
@@ -208,47 +209,38 @@ class SQLExecutionWidget(QWidget):
         self.setup_shortcuts()
 
     def create_content(self) -> None:
-        # Create horizontal splitter for main content and sidebar
+        # Create main horizontal splitter
         main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.main_layout.addWidget(main_splitter)
 
-        # Create vertical splitter for SQL input and table view
-        left_splitter = QSplitter(Qt.Orientation.Vertical)
+        # Create left widget for SQL input, execute button, and table view
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
 
         # Create and set up the SQLTextEdit
         self.text_edit = SQLTextEdit()
+        left_layout.addWidget(self.text_edit)
 
         # Create execute button
         self.execute_button = QPushButton("Execute Query")
         self.execute_button.clicked.connect(self.on_execute_clicked)
-
-        # Create a widget to hold the text edit and button
-        input_widget = QWidget()
-        input_layout = QVBoxLayout(input_widget)
-        input_layout.addWidget(self.text_edit)
-        input_layout.addWidget(self.execute_button)
+        left_layout.addWidget(self.execute_button)
 
         # Create and set up the table widget
         self.table_widget = TableWidget()
         self.table_widget.table_view.setSortingEnabled(True)
         self.table_widget.filterChanged.connect(self.on_filter_changed)
+        left_layout.addWidget(self.table_widget)
 
-        # Add input widget and table widget to left splitter
-        left_splitter.addWidget(input_widget)
-        left_splitter.addWidget(self.table_widget)
+        # Add left widget to main splitter
+        main_splitter.addWidget(left_widget)
 
-        # Create plotting widget
+        # Create plotting widget and add it to main splitter
         self.plotting_widget = PlottingWidget()
-
-        # Add left splitter and plotting widget to main splitter
-        main_splitter.addWidget(left_splitter)
         main_splitter.addWidget(self.plotting_widget)
 
-        # Set splitter sizes
-        left_splitter.setSizes([200, 400])  # Adjust these values as needed
-        main_splitter.setSizes([700, 300])  # Adjust these values as needed
-
-        # Add main splitter to layout
-        self.main_layout.addWidget(main_splitter)
+        # Set initial sizes for the main splitter
+        main_splitter.setSizes([int(self.width() * 0.6), int(self.width() * 0.4)])
 
     def on_filter_changed(self, column: int, filter_text: str) -> None:
         model = self.table_widget.table_view.model()
