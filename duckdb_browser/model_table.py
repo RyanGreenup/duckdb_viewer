@@ -5,7 +5,7 @@ from PySide6.QtCore import (
     QAbstractTableModel,
     QModelIndex,
 )
-from duckdb import DuckDBPyConnection, DuckDBPyResult
+from duckdb import DuckDBPyConnection
 import pandas as pd
 
 # Custom type for our data
@@ -17,7 +17,7 @@ class DuckDBTableModel(QAbstractTableModel):
         self,
         connection: DuckDBPyConnection,
         table_name: str,
-        result: Optional[DuckDBPyResult] = None,
+        result: Optional[Any] = None,
     ):
         super().__init__()
         self.connection: DuckDBPyConnection = connection
@@ -47,7 +47,7 @@ class DuckDBTableModel(QAbstractTableModel):
         self._filtered_data = self._data
         self._filters = [""] * len(self.headers)
 
-    def _fetch_data_from_result(self, result: DuckDBPyResult) -> None:
+    def _fetch_data_from_result(self, result: Any) -> None:
         # Fetch column names and types
         self.headers = [(col[0], str(col[1])) for col in result.description]
 
