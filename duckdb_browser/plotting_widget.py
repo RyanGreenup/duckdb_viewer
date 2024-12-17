@@ -87,5 +87,6 @@ class PlottingWidget(QWidget):
             sns.barplot(data=self.data, x=x_col, y=y_col, ax=ax)
 
         ax.set_title(f"{plot_type} Plot: {x_col} vs {y_col}")
+        ax.tick_params(axis='x', rotation=45)
         self.figure.tight_layout()
         self.canvas.draw_idle()  # type: ignore [no-untyped-call]
