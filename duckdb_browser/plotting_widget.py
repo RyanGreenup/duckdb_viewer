@@ -223,6 +223,8 @@ class PlottingWidget(QWidget):
             or valid_data["color"].empty
         ):
             color_col = None
+        else:
+            color_col = str(color_col)
 
         match plot_type:
             case PlotType.SCATTER:
@@ -391,7 +393,7 @@ class PlottingWidget(QWidget):
             series.append(box_set)
             self.chart.addSeries(series)
 
-    def _create_box_set(self, data: Series[DataType]) -> QBoxSet:
+    def _create_box_set(self, data: Series) -> QBoxSet:
         q1 = float(np.percentile(data, 25))
         median = float(np.median(data))
         q3 = float(np.percentile(data, 75))
@@ -473,7 +475,7 @@ class PlottingWidget(QWidget):
         elif isinstance(axis, QBarCategoryAxis):
             axis.setCategories(categories)
 
-    def _show_tooltip(self, point: QPointF, state: bool):
+    def _show_tooltip(self, point: QPointF, state: bool) -> None:
         if state:
             x = self.chart.mapToValue(point).x()
             y = self.chart.mapToValue(point).y()
