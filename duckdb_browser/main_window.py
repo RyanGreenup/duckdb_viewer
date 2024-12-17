@@ -16,8 +16,8 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QGridLayout,
 )
-from typing import List, Optional, Callable, Union
-from PySide6.QtCore import Qt, QModelIndex, Signal, QObject
+from typing import List, Optional, Callable
+from PySide6.QtCore import Qt, QModelIndex, Signal
 import duckdb
 from duckdb import DuckDBPyConnection
 from view_table import TableWidget
@@ -306,7 +306,11 @@ class MainWindow(QMainWindow):
 
     def show_schema(self) -> None:
         if not self.con:
-            QMessageBox.warning(self, "No Database Open", "Please open a database before viewing the schema.")
+            QMessageBox.warning(
+                self,
+                "No Database Open",
+                "Please open a database before viewing the schema.",
+            )
             return
 
         schema = get_complete_schema(self.con)
@@ -329,7 +333,11 @@ class MainWindow(QMainWindow):
 
     def show_sql_schema(self) -> None:
         if not self.con:
-            QMessageBox.warning(self, "No Database Open", "Please open a database before viewing the schema.")
+            QMessageBox.warning(
+                self,
+                "No Database Open",
+                "Please open a database before viewing the schema.",
+            )
             return
 
         schema = get_complete_schema(self.con)
