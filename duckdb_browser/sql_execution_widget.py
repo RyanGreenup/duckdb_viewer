@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QSplitter, QVBoxLayout, QPlainTextEdit
+from PySide6.QtWidgets import QWidget, QSplitter, QVBoxLayout, QPlainTextEdit, QPushButton
 from PySide6.QtCore import Qt
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
@@ -23,8 +23,18 @@ class SQLExecutionWidget(QWidget):
         self.text_edit = QPlainTextEdit()
         self.text_edit.setPlaceholderText("Enter your SQL query here...")
 
+        # Create execute button
+        self.execute_button = QPushButton("Execute Query")
+        self.execute_button.clicked.connect(self.on_execute_clicked)
+
+        # Create a widget to hold the text edit and button
+        input_widget = QWidget()
+        input_layout = QVBoxLayout(input_widget)
+        input_layout.addWidget(self.text_edit)
+        input_layout.addWidget(self.execute_button)
+
         # Add widgets to splitter
-        splitter.addWidget(self.text_edit)
+        splitter.addWidget(input_widget)
         splitter.addWidget(self.table_widget)
 
         # Set splitter sizes
@@ -33,6 +43,10 @@ class SQLExecutionWidget(QWidget):
 
         # Add splitter to layout
         self.layout.addWidget(splitter)
+
+    def on_execute_clicked(self) -> None:
+        query = self.text_edit.toPlainText()
+        self.execute_sql(query)
 
     def execute_sql(self, query: str) -> None:
         try:
