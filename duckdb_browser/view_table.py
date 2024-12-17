@@ -7,8 +7,10 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import (
     Qt,
+    QSize,
+    QAbstractItemModel,
 )
-from typing import List, Optional
+from typing import List, Optional, Union
 
 
 class FilterHeader(QHeaderView):
@@ -29,7 +31,7 @@ class FilterHeader(QHeaderView):
             return self.filter_widgets[index]
         return None
 
-    def sizeHint(self) -> Qt.QSize:
+    def sizeHint(self) -> QSize:
         size = super().sizeHint()
         if self.filter_widgets:
             size.setHeight(size.height() + self.filter_widgets[0].sizeHint().height())
@@ -67,7 +69,7 @@ class TableHeader(QHeaderView):
         self.setSectionsClickable(True)
         self.setSortIndicatorShown(True)
 
-    def sizeHint(self) -> Qt.QSize:
+    def sizeHint(self) -> QSize:
         size = super().sizeHint()
         if self.orientation() == Qt.Orientation.Horizontal:
             size.setHeight(size.height() * 2)  # Double the height for two lines
@@ -86,7 +88,7 @@ class CombinedHeaderWidget(QWidget):
         layout.addWidget(self.table_header)
         layout.addWidget(self.filter_header)
 
-    def setModel(self, model: Qt.QAbstractItemModel) -> None:
+    def setModel(self, model: QAbstractItemModel) -> None:
         self.table_header.setModel(model)
         self.filter_header.setModel(model)
         self.filter_header.setFilterWidgets(model.columnCount())
@@ -113,7 +115,7 @@ class TableWidget(QWidget):
         )
         self._main_layout.addWidget(self.table_view)
 
-    def set_model(self, model: Qt.QAbstractItemModel) -> None:
+    def set_model(self, model: QAbstractItemModel) -> None:
         self.table_view.setModel(model)
         self.combined_header.setModel(model)
 
