@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QFileDialog,
+    QTextEdit,
 )
 from typing import List, Optional, Callable
 from PySide6.QtCore import Qt, QModelIndex, Signal
@@ -21,6 +22,7 @@ from view_table import TableWidget
 from model_table import DuckDBTableModel
 from model_sidebar_list import TableListModel
 from sql_execution_widget import SQLExecutionWidget
+from utils_get_schema import get_complete_schema
 
 
 class MainWindow(QMainWindow):
@@ -241,6 +243,9 @@ class MainWindow(QMainWindow):
         open_db_action = file_menu.addAction("&Open Database")
         open_db_action.triggered.connect(self.open_database)
 
+        show_schema_action = file_menu.addAction("Show &Schema")
+        show_schema_action.triggered.connect(self.show_schema)
+
         exit_action = file_menu.addAction("E&xit")
         exit_action.triggered.connect(self.close)
 
@@ -293,6 +298,21 @@ class MainWindow(QMainWindow):
             "About DuckDB Browser",
             "DuckDB Browser is a simple GUI for browsing DuckDB databases.",
         )
+
+    def show_schema(self) -> None:
+        schema = get_complete_schema(self.con)
+        schema_dialog = QMessageBox(self)
+        schema_dialog.setWindowTitle("Database Schema")
+        schema_dialog.setText("Here's the complete schema of the database:")
+        
+        text_edit = QTextEdit()
+        text_edit.setPlainText(schema)
+        text_edit.setReadOnly(True)
+        
+        schema_dialog.layout().addWidget(text_edit, 1, 0, 1, schema_dialog.layout().columnCount())
+        schema_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
+        
+        schema_dialog.exec()
 
 
 def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
