@@ -11,6 +11,7 @@ import pandas as pd
 # Custom type for our data
 DataType = List[List[Any]]
 
+
 class DuckDBTableModel(QAbstractTableModel):
     def __init__(self, connection: DuckDBPyConnection, table_name: str):
         super().__init__()
@@ -37,12 +38,22 @@ class DuckDBTableModel(QAbstractTableModel):
             return str(self._data[index.row()][index.column()])
         return None
 
-    def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
-        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+    def headerData(
+        self,
+        section: int,
+        orientation: Qt.Orientation,
+        role: int = Qt.ItemDataRole.DisplayRole,
+    ) -> Any:
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.DisplayRole
+        ):
             return self.headers[section]
         return None
 
-    def setData(self, index: QModelIndex, value: Any, role: int = Qt.ItemDataRole.EditRole) -> bool:
+    def setData(
+        self, index: QModelIndex, value: Any, role: int = Qt.ItemDataRole.EditRole
+    ) -> bool:
         if role == Qt.ItemDataRole.EditRole:
             row = index.row()
             col = index.column()
@@ -62,7 +73,11 @@ class DuckDBTableModel(QAbstractTableModel):
         return False
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-        return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable
+        return (
+            Qt.ItemFlag.ItemIsEnabled
+            | Qt.ItemFlag.ItemIsSelectable
+            | Qt.ItemFlag.ItemIsEditable
+        )
 
 
 def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
