@@ -3,10 +3,8 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import seaborn as sns  # type: ignore
 import pandas as pd
-from typing import Optional, TypeVar
+from typing import Optional
 from matplotlib.axes import Axes
-
-T = TypeVar("T", bound=FigureCanvas)
 
 
 class PlottingWidget(QWidget):
@@ -14,7 +12,7 @@ class PlottingWidget(QWidget):
         super().__init__(parent)
         self._layout = QVBoxLayout(self)
         self.figure: Figure = Figure(figsize=(5, 4), dpi=100)
-        self.canvas: T = FigureCanvas(self.figure)  # type: ignore
+        self.canvas: FigureCanvas = FigureCanvas(self.figure)
         self._layout.addWidget(self.canvas)
 
         # Set Seaborn style
