@@ -7,9 +7,10 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet
+from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet, QValueAxis
 from PySide6.QtGui import QPainter
 import pandas as pd
+import numpy as np
 from typing import Optional, List
 
 class PlottingWidget(QWidget):
@@ -21,7 +22,7 @@ class PlottingWidget(QWidget):
         self.x_combo = QComboBox()
         self.y_combo = QComboBox()
         self.plot_type_combo = QComboBox()
-        self.plot_type_combo.addItems(["Scatter", "Line", "Bar"])
+        self.plot_type_combo.addItems(["Scatter", "Line", "Bar", "Histogram"])
 
         # Set minimum width for combo boxes
         min_width = 150
@@ -132,16 +133,33 @@ class PlottingWidget(QWidget):
                 bar_set.append(float(y))
             series.append(bar_set)
             self.chart.addSeries(series)
+        elif plot_type == "Histogram":
+            series = QBarSeries()
+            bar_set = QBarSet("Frequency")
+            
+            # Calculate histogram data
+            hist, bin_edges = np.histogram(valid_data['x'], bins='auto')
+            
+            for count in hist:
+                bar_set.append(float(count))
+            series.append(bar_set)
+            self.chart.addSeries(series)
 
-        self.chart.setTitle(f"{plot_type} Plot: {x_col} vs {y_col}")
+        self.chart.setTitle(f"{plot_type} Plot: {x_col}")
         self.chart.createDefaultAxes()
         x_axis = self.chart.axes(Qt.Horizontal)[0]
-        x_axis.setTitleText(str(x_col))
         y_axis = self.chart.axes(Qt.Vertical)[0]
-        y_axis.setTitleText(str(y_col))
 
-        if plot_type == "Bar":
-            categories = [str(x) for x in valid_data['x']]
+        if plot_type == "Histogram":
+            x_axis.setTitleText("Bins")
+            y_axis.setTitleText("Frequency")
+            categories = [f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}" for i in range(len(bin_edges)-1)]
             x_axis.setCategories(categories)
+        else:
+            x_axis.setTitleText(str(x_col))
+            y_axis.setTitleText(str(y_col))
+            if plot_type == "Bar":
+                categories = [str(x) for x in valid_data['x']]
+                x_axis.setCategories(categories)
 
         self.chart_view.update()
