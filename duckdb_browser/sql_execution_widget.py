@@ -141,8 +141,8 @@ class SQLTextEdit(QTextEdit):
 
         super().keyPressEvent(e)
 
-        ctrl_or_shift = event.modifiers() & (Qt.ControlModifier | Qt.ShiftModifier)
-        if ctrl_or_shift and event.text() == "":
+        ctrl_or_shift = e.modifiers() & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier)
+        if ctrl_or_shift and e.text() == "":
             return
 
         completion_prefix = self.text_under_cursor()
