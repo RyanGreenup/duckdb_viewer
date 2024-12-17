@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QTableView
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
+from PySide6.QtCore import QPersistentModelIndex, Qt, QAbstractTableModel, QModelIndex
 import duckdb
 from duckdb import DuckDBPyConnection
 from typing import Optional, Any, List, Union
@@ -27,10 +27,14 @@ class DuckDBTableModel(QAbstractTableModel):
         self._data = df.values.tolist()
         self.headers = df.columns.tolist()
 
-    def rowCount(self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()) -> int:
+    def rowCount(
+        self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
+    ) -> int:
         return len(self._data)
 
-    def columnCount(self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()) -> int:
+    def columnCount(
+        self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
+    ) -> int:
         return len(self.headers)
 
     def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
