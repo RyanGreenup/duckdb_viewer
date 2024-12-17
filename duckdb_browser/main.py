@@ -183,7 +183,7 @@ def create_connection(db_path: str = ":memory:") -> DuckDBPyConnection:
 
 class MainWindow(QMainWindow):
     def __init__(
-        self, db_path: str = ":memory:", parent: Optional[QMainWindow] = None
+        self, db_path: str = ":memory:", initial_table: Optional[str] = None, parent: Optional[QMainWindow] = None
     ) -> None:
         super().__init__(parent)
 
@@ -221,8 +221,27 @@ class MainWindow(QMainWindow):
         # Set central widget
         self.setCentralWidget(main_widget)
 
-        # Load the first table if it exists
-        self.load_first_table()
+        # Load the specified table or the first table if it exists
+        self.load_initial_table(initial_table)
+
+    def load_initial_table(self, initial_table: Optional[str] = None) -> None:
+        if initial_table:
+            # Try to load the specified table
+            index = self.find_table_index(initial_table)
+            if index.isValid():
+                self.on_sidebar_clicked(index)
+            else:
+                print(f"Table '{initial_table}' not found. Loading first available table.")
+                self.load_first_table()
+        else:
+            self.load_first_table()
+
+    def find_table_index(self, table_name: str) -> QModelIndex:
+        for row in range(self.sidebar_model.rowCount()):
+            index = self.sidebar_model.index(row, 0)
+            if self.sidebar_model.data(index, Qt.ItemDataRole.DisplayRole) == table_name:
+                return index
+        return QModelIndex()
 
     def load_first_table(self) -> None:
         if self.sidebar_model.rowCount() > 0:
@@ -236,9 +255,9 @@ class MainWindow(QMainWindow):
         self.sidebar.setCurrentIndex(index)
 
 
-def main(db_path: str = "duckdb_browser.db") -> None:
+def main(db_path: str = "duckdb_browser.db", table_name: Optional[str] = None) -> None:
     app = QApplication(sys.argv)
-    window = MainWindow(db_path=db_path)
+    window = MainWindow(db_path=db_path, initial_table=table_name)
     window.show()
     sys.exit(app.exec())
 
