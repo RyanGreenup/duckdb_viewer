@@ -14,7 +14,7 @@ from PySide6.QtCore import (
 )
 import duckdb
 from duckdb import DuckDBPyConnection
-from views.table import TableWidget
+from views.table_view import TableWidget
 from models.table import DuckDBTableModel
 from models.sidebar_list import TableListModel
 
