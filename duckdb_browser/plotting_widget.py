@@ -12,6 +12,14 @@ from PySide6.QtGui import QPainter, QColor
 import pandas as pd
 import numpy as np
 from typing import Optional, List
+from enum import Enum, auto
+
+class PlotType(Enum):
+    SCATTER = auto()
+    LINE = auto()
+    BAR = auto()
+    HISTOGRAM = auto()
+    BOX_PLOT = auto()
 
 class PlottingWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
@@ -23,7 +31,7 @@ class PlottingWidget(QWidget):
         self.y_combo = QComboBox()
         self.color_combo = QComboBox()
         self.plot_type_combo = QComboBox()
-        self.plot_type_combo.addItems(["Scatter", "Line", "Bar", "Histogram", "Box Plot"])
+        self.plot_type_combo.addItems([plot_type.name.capitalize().replace('_', ' ') for plot_type in PlotType])
 
         # Set minimum width for combo boxes
         min_width = 150
@@ -116,7 +124,7 @@ class PlottingWidget(QWidget):
         self.chart.removeAllSeries()
         self.chart.createDefaultAxes()
 
-        plot_type = self.plot_type_combo.currentText()
+        plot_type = PlotType[self.plot_type_combo.currentText().upper().replace(' ', '_')]
         color_col = self.color_combo.currentText()
 
         # Convert data to numeric, replacing non-numeric values with NaN
@@ -129,120 +137,141 @@ class PlottingWidget(QWidget):
             valid_data['color'] = self.data[color_col]
         valid_data = valid_data.dropna()
 
-        if plot_type == "Scatter":
-            if color_col != "None":
-                unique_colors = valid_data['color'].unique()
-                color_map = {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
-                for color in unique_colors:
-                    series = QScatterSeries()
-                    series.setName(str(color))
-                    series.setColor(color_map[color])
-                    color_data = valid_data[valid_data['color'] == color]
-                    for x, y in zip(color_data['x'], color_data['y']):
-                        series.append(float(x), float(y))
-                    self.chart.addSeries(series)
-            else:
-                series = QScatterSeries()
-                for x, y in zip(valid_data['x'], valid_data['y']):
-                    series.append(float(x), float(y))
-                self.chart.addSeries(series)
-        elif plot_type == "Line":
-            if color_col != "None":
-                unique_colors = valid_data['color'].unique()
-                color_map = {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
-                for color in unique_colors:
-                    series = QLineSeries()
-                    series.setName(str(color))
-                    series.setColor(color_map[color])
-                    color_data = valid_data[valid_data['color'] == color]
-                    for x, y in zip(color_data['x'], color_data['y']):
-                        series.append(float(x), float(y))
-                    self.chart.addSeries(series)
-            else:
-                series = QLineSeries()
-                for x, y in zip(valid_data['x'], valid_data['y']):
-                    series.append(float(x), float(y))
-                self.chart.addSeries(series)
-        elif plot_type == "Bar":
-            series = QBarSeries()
-            if color_col != "None":
-                unique_colors = valid_data['color'].unique()
-                color_map = {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
-                for color in unique_colors:
-                    bar_set = QBarSet(str(color))
-                    bar_set.setColor(color_map[color])
-                    color_data = valid_data[valid_data['color'] == color]
-                    for y in color_data['y']:
-                        bar_set.append(float(y))
-                    series.append(bar_set)
-            else:
-                bar_set = QBarSet(str(y_col))
-                for y in valid_data['y']:
-                    bar_set.append(float(y))
-                series.append(bar_set)
-            self.chart.addSeries(series)
-        elif plot_type == "Histogram":
-            series = QBarSeries()
-            if color_col != "None":
-                unique_colors = valid_data['color'].unique()
-                color_map = {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
-                for color in unique_colors:
-                    bar_set = QBarSet(str(color))
-                    bar_set.setColor(color_map[color])
-                    color_data = valid_data[valid_data['color'] == color]
-                    hist, _ = np.histogram(color_data['x'], bins='auto')
-                    for count in hist:
-                        bar_set.append(float(count))
-                    series.append(bar_set)
-            else:
-                bar_set = QBarSet("Frequency")
-                hist, _ = np.histogram(valid_data['x'], bins='auto')
-                for count in hist:
-                    bar_set.append(float(count))
-                series.append(bar_set)
-            self.chart.addSeries(series)
-        elif plot_type == "Box Plot":
-            if color_col != "None":
-                unique_colors = valid_data['color'].unique()
-                color_map = {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
-                series = QBoxPlotSeries()
-                for color in unique_colors:
-                    color_data = valid_data[valid_data['color'] == color]['y']
-                    q1 = np.percentile(color_data, 25)
-                    median = np.median(color_data)
-                    q3 = np.percentile(color_data, 75)
-                    iqr = q3 - q1
-                    lower_bound = q1 - 1.5 * iqr
-                    upper_bound = q3 + 1.5 * iqr
-                    box_set = QBoxSet(lower_bound, q1, median, q3, upper_bound)
-                    box_set.setLabel(str(color))
-                    box_set.setBrush(color_map[color])
-                    series.append(box_set)
-                self.chart.addSeries(series)
-            else:
-                series = QBoxPlotSeries()
-                q1 = np.percentile(valid_data['y'], 25)
-                median = np.median(valid_data['y'])
-                q3 = np.percentile(valid_data['y'], 75)
-                iqr = q3 - q1
-                lower_bound = q1 - 1.5 * iqr
-                upper_bound = q3 + 1.5 * iqr
-                box_set = QBoxSet(lower_bound, q1, median, q3, upper_bound)
-                series.append(box_set)
-                self.chart.addSeries(series)
+        match plot_type:
+            case PlotType.SCATTER:
+                self._plot_scatter(valid_data, color_col)
+            case PlotType.LINE:
+                self._plot_line(valid_data, color_col)
+            case PlotType.BAR:
+                self._plot_bar(valid_data, color_col, y_col)
+            case PlotType.HISTOGRAM:
+                self._plot_histogram(valid_data, color_col)
+            case PlotType.BOX_PLOT:
+                self._plot_box(valid_data, color_col, y_col)
 
-        self.chart.setTitle(f"{plot_type}: {y_col}")
+        self.chart.setTitle(f"{plot_type.name.capitalize().replace('_', ' ')}: {y_col}")
         self.chart.createDefaultAxes()
         x_axis = self.chart.axes(Qt.Horizontal)[0]
         y_axis = self.chart.axes(Qt.Vertical)[0]
 
-        if plot_type == "Histogram":
+        self._set_axis_labels(x_axis, y_axis, plot_type, x_col, y_col, valid_data, color_col)
+
+        self.chart_view.update()
+
+    def _plot_scatter(self, valid_data: pd.DataFrame, color_col: str) -> None:
+        if color_col != "None":
+            unique_colors = valid_data['color'].unique()
+            color_map = self._get_color_map(unique_colors)
+            for color in unique_colors:
+                series = QScatterSeries()
+                series.setName(str(color))
+                series.setColor(color_map[color])
+                color_data = valid_data[valid_data['color'] == color]
+                for x, y in zip(color_data['x'], color_data['y']):
+                    series.append(float(x), float(y))
+                self.chart.addSeries(series)
+        else:
+            series = QScatterSeries()
+            for x, y in zip(valid_data['x'], valid_data['y']):
+                series.append(float(x), float(y))
+            self.chart.addSeries(series)
+
+    def _plot_line(self, valid_data: pd.DataFrame, color_col: str) -> None:
+        if color_col != "None":
+            unique_colors = valid_data['color'].unique()
+            color_map = self._get_color_map(unique_colors)
+            for color in unique_colors:
+                series = QLineSeries()
+                series.setName(str(color))
+                series.setColor(color_map[color])
+                color_data = valid_data[valid_data['color'] == color]
+                for x, y in zip(color_data['x'], color_data['y']):
+                    series.append(float(x), float(y))
+                self.chart.addSeries(series)
+        else:
+            series = QLineSeries()
+            for x, y in zip(valid_data['x'], valid_data['y']):
+                series.append(float(x), float(y))
+            self.chart.addSeries(series)
+
+    def _plot_bar(self, valid_data: pd.DataFrame, color_col: str, y_col: str) -> None:
+        series = QBarSeries()
+        if color_col != "None":
+            unique_colors = valid_data['color'].unique()
+            color_map = self._get_color_map(unique_colors)
+            for color in unique_colors:
+                bar_set = QBarSet(str(color))
+                bar_set.setColor(color_map[color])
+                color_data = valid_data[valid_data['color'] == color]
+                for y in color_data['y']:
+                    bar_set.append(float(y))
+                series.append(bar_set)
+        else:
+            bar_set = QBarSet(str(y_col))
+            for y in valid_data['y']:
+                bar_set.append(float(y))
+            series.append(bar_set)
+        self.chart.addSeries(series)
+
+    def _plot_histogram(self, valid_data: pd.DataFrame, color_col: str) -> None:
+        series = QBarSeries()
+        if color_col != "None":
+            unique_colors = valid_data['color'].unique()
+            color_map = self._get_color_map(unique_colors)
+            for color in unique_colors:
+                bar_set = QBarSet(str(color))
+                bar_set.setColor(color_map[color])
+                color_data = valid_data[valid_data['color'] == color]
+                hist, _ = np.histogram(color_data['x'], bins='auto')
+                for count in hist:
+                    bar_set.append(float(count))
+                series.append(bar_set)
+        else:
+            bar_set = QBarSet("Frequency")
+            hist, _ = np.histogram(valid_data['x'], bins='auto')
+            for count in hist:
+                bar_set.append(float(count))
+            series.append(bar_set)
+        self.chart.addSeries(series)
+
+    def _plot_box(self, valid_data: pd.DataFrame, color_col: str, y_col: str) -> None:
+        if color_col != "None":
+            unique_colors = valid_data['color'].unique()
+            color_map = self._get_color_map(unique_colors)
+            series = QBoxPlotSeries()
+            for color in unique_colors:
+                color_data = valid_data[valid_data['color'] == color]['y']
+                box_set = self._create_box_set(color_data)
+                box_set.setLabel(str(color))
+                box_set.setBrush(color_map[color])
+                series.append(box_set)
+            self.chart.addSeries(series)
+        else:
+            series = QBoxPlotSeries()
+            box_set = self._create_box_set(valid_data['y'])
+            series.append(box_set)
+            self.chart.addSeries(series)
+
+    def _create_box_set(self, data: pd.Series) -> QBoxSet:
+        q1 = np.percentile(data, 25)
+        median = np.median(data)
+        q3 = np.percentile(data, 75)
+        iqr = q3 - q1
+        lower_bound = q1 - 1.5 * iqr
+        upper_bound = q3 + 1.5 * iqr
+        return QBoxSet(lower_bound, q1, median, q3, upper_bound)
+
+    def _get_color_map(self, unique_colors):
+        return {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
+
+    def _set_axis_labels(self, x_axis, y_axis, plot_type, x_col, y_col, valid_data, color_col):
+        if plot_type == PlotType.HISTOGRAM:
             x_axis.setTitleText("Bins")
             y_axis.setTitleText("Frequency")
             _, bin_edges = np.histogram(valid_data['x'], bins='auto')
             categories = [f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}" for i in range(len(bin_edges)-1)]
             x_axis.setCategories(categories)
-        elif plot_type == "Box Plot":
+        elif plot_type == PlotType.BOX_PLOT:
             x_axis.setTitleText(str(y_col))
             y_axis.setTitleText("Value")
             if color_col != "None":
@@ -252,8 +281,6 @@ class PlottingWidget(QWidget):
         else:
             x_axis.setTitleText(str(x_col))
             y_axis.setTitleText(str(y_col))
-            if plot_type == "Bar":
+            if plot_type == PlotType.BAR:
                 categories = [str(x) for x in valid_data['x']]
                 x_axis.setCategories(categories)
-
-        self.chart_view.update()
