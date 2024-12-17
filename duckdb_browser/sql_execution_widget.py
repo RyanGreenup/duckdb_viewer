@@ -7,10 +7,36 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QTextCharFormat, QSyntaxHighlighter, QTextCursor
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
 from model_table import DuckDBTableModel
+from pygments import highlight
+from pygments.lexers import SqlLexer
+from pygments.formatters import HtmlFormatter
+
+
+class SQLSyntaxHighlighter(QSyntaxHighlighter):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.lexer = SqlLexer()
+        self.formatter = HtmlFormatter(style='default')
+
+    def highlightBlock(self, text):
+        html = highlight(text, self.lexer, self.formatter)
+        cursor = QTextCursor(self.document())
+        cursor.select(QTextCursor.BlockUnderCursor)
+        cursor.insertHtml(html)
+
+
+class SQLTextEdit(QTextEdit):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.highlighter = SQLSyntaxHighlighter(self.document())
+        self.setPlaceholderText("Enter your SQL query here...")
+
+    def set_background_color(self, color: QColor):
+        self.setStyleSheet(f"background-color: {color.name()};")
 
 
 class SQLExecutionWidget(QWidget):
@@ -21,7 +47,7 @@ class SQLExecutionWidget(QWidget):
         self.connection: DuckDBPyConnection = connection
         self.main_layout: QVBoxLayout = QVBoxLayout(self)
         self.table_widget: TableWidget
-        self.text_edit: QTextEdit
+        self.text_edit: SQLTextEdit
         self.execute_button: QPushButton
         self.create_content()
 
@@ -33,9 +59,8 @@ class SQLExecutionWidget(QWidget):
         self.table_widget = TableWidget()
         self.table_widget.table_view.setSortingEnabled(True)
 
-        # Create and set up the QTextEdit
-        self.text_edit = QTextEdit()
-        self.text_edit.setPlaceholderText("Enter your SQL query here...")
+        # Create and set up the SQLTextEdit
+        self.text_edit = SQLTextEdit()
 
         # Create execute button
         self.execute_button = QPushButton("Execute Query")
@@ -75,4 +100,4 @@ class SQLExecutionWidget(QWidget):
 
     def highlight_sql(self, success: bool) -> None:
         color = QColor(200, 255, 200) if success else QColor(255, 200, 200)
-        self.text_edit.setStyleSheet(f"background-color: {color.name()};")
+        self.text_edit.set_background_color(color)
