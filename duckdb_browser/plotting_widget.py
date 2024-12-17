@@ -11,7 +11,7 @@ from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QB
 from PySide6.QtGui import QPainter, QColor
 import pandas as pd
 import numpy as np
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from enum import Enum, auto
 
 class PlotType(Enum):
@@ -127,9 +127,9 @@ class PlottingWidget(QWidget):
         plot_type = PlotType[self.plot_type_combo.currentText().upper().replace(' ', '_')]
         color_col = self.color_combo.currentText()
 
-        # Convert data to numeric, replacing non-numeric values with NaN
-        x_data = pd.to_numeric(self.data[x_col], errors='coerce')
-        y_data = pd.to_numeric(self.data[y_col], errors='coerce')
+        # Convert data to numeric or categorical
+        x_data, x_categories = self._convert_to_numeric_or_categorical(self.data[x_col])
+        y_data, y_categories = self._convert_to_numeric_or_categorical(self.data[y_col])
 
         # Remove NaN values
         valid_data = pd.DataFrame({'x': x_data, 'y': y_data})
@@ -154,9 +154,16 @@ class PlottingWidget(QWidget):
         x_axis = self.chart.axes(Qt.Horizontal)[0]
         y_axis = self.chart.axes(Qt.Vertical)[0]
 
-        self._set_axis_labels(x_axis, y_axis, plot_type, x_col, y_col, valid_data, color_col)
+        self._set_axis_labels(x_axis, y_axis, plot_type, x_col, y_col, valid_data, color_col, x_categories, y_categories)
 
         self.chart_view.update()
+
+    def _convert_to_numeric_or_categorical(self, data: pd.Series) -> Tuple[pd.Series, Optional[List[str]]]:
+        if data.dtype == 'object':
+            categories = data.unique().tolist()
+            return pd.Categorical(data).codes, categories
+        else:
+            return pd.to_numeric(data, errors='coerce'), None
 
     def _plot_scatter(self, valid_data: pd.DataFrame, color_col: str) -> None:
         if color_col != "None":
@@ -264,7 +271,7 @@ class PlottingWidget(QWidget):
     def _get_color_map(self, unique_colors):
         return {color: QColor(hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256) for color in unique_colors}
 
-    def _set_axis_labels(self, x_axis, y_axis, plot_type, x_col, y_col, valid_data, color_col):
+    def _set_axis_labels(self, x_axis, y_axis, plot_type, x_col, y_col, valid_data, color_col, x_categories, y_categories):
         if plot_type == PlotType.HISTOGRAM:
             x_axis.setTitleText("Bins")
             y_axis.setTitleText("Frequency")
@@ -281,6 +288,10 @@ class PlottingWidget(QWidget):
         else:
             x_axis.setTitleText(str(x_col))
             y_axis.setTitleText(str(y_col))
+            if x_categories:
+                x_axis.setCategories(x_categories)
+            if y_categories:
+                y_axis.setCategories(y_categories)
             if plot_type == PlotType.BAR:
                 categories = [str(x) for x in valid_data['x']]
                 x_axis.setCategories(categories)
