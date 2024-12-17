@@ -71,7 +71,7 @@ class TableListModel(QAbstractItemModel):
         ORDER BY type, name
         """
         for item_type, name in self.connection.execute(query).fetchall():
-            parent_item = self.tables_item if item_type == 'table' else self.views_item
+            parent_item = self.tables_item if item_type == "table" else self.views_item
             item = DatabaseItem(name, item_type, parent_item)
             parent_item.add_child(item)
 
