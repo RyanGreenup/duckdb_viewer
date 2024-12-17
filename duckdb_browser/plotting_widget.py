@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QPushButton,
     QLabel,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
