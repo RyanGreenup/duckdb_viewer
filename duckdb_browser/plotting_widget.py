@@ -15,9 +15,13 @@ class PlottingWidget(QWidget):
         # Create combo boxes and update button
         self.x_combo = QComboBox()
         self.y_combo = QComboBox()
+        self.plot_type_combo = QComboBox()
+        self.plot_type_combo.addItems(["Scatter", "Line", "Bar"])
         self.update_button = QPushButton("Update Plot")
         
         combo_layout = QHBoxLayout()
+        combo_layout.addWidget(QLabel("Plot Type:"))
+        combo_layout.addWidget(self.plot_type_combo)
         combo_layout.addWidget(QLabel("X-axis:"))
         combo_layout.addWidget(self.x_combo)
         combo_layout.addWidget(QLabel("Y-axis:"))
@@ -62,9 +66,15 @@ class PlottingWidget(QWidget):
         self.figure.clear()
         ax: Axes = self.figure.add_subplot(111)
 
-        # Use Seaborn to create a scatter plot
-        sns.scatterplot(data=self.data, x=x_col, y=y_col, ax=ax)
+        plot_type = self.plot_type_combo.currentText()
 
-        ax.set_title(f"{x_col} vs {y_col}")
+        if plot_type == "Scatter":
+            sns.scatterplot(data=self.data, x=x_col, y=y_col, ax=ax)
+        elif plot_type == "Line":
+            sns.lineplot(data=self.data, x=x_col, y=y_col, ax=ax)
+        elif plot_type == "Bar":
+            sns.barplot(data=self.data, x=x_col, y=y_col, ax=ax)
+
+        ax.set_title(f"{plot_type} Plot: {x_col} vs {y_col}")
         self.figure.tight_layout()
         self.canvas.draw_idle()  # type: ignore [no-untyped-call]
