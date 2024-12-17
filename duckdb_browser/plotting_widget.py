@@ -22,7 +22,9 @@ from PySide6.QtCharts import (
 from PySide6.QtGui import QPainter, QColor
 import pandas as pd
 import numpy as np
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Union
+import numpy as np
+from numpy.typing import NDArray
 from enum import Enum, auto
 
 
@@ -361,20 +363,20 @@ class PlottingWidget(QWidget):
             self.chart.addSeries(series)
 
     def _create_box_set(self, data: pd.Series) -> QBoxSet:
-        q1 = np.percentile(data, 25)
-        median = np.median(data)
-        q3 = np.percentile(data, 75)
+        q1 = float(np.percentile(data, 25))
+        median = float(np.median(data))
+        q3 = float(np.percentile(data, 75))
         iqr = q3 - q1
-        lower_bound = q1 - 1.5 * iqr
-        upper_bound = q3 + 1.5 * iqr
+        lower_bound = float(q1 - 1.5 * iqr)
+        upper_bound = float(q3 + 1.5 * iqr)
         return QBoxSet(lower_bound, q1, median, q3, upper_bound)
 
-    ColorMap = Dict[str, QColor]
+    ColorMap = Dict[Union[str, float], QColor]
 
-    def _get_color_map(self, unique_colors: List[str]) -> ColorMap:
+    def _get_color_map(self, unique_colors: Union[NDArray, List[Union[str, float]]]) -> ColorMap:
         return {
-            color: QColor(
-                hash(color) % 256, hash(color * 2) % 256, hash(color * 3) % 256
+            str(color): QColor(
+                hash(str(color)) % 256, hash(str(color) * 2) % 256, hash(str(color) * 3) % 256
             )
             for color in unique_colors
         }
