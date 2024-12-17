@@ -1,8 +1,15 @@
-from PySide6.QtWidgets import QWidget, QSplitter, QVBoxLayout, QPlainTextEdit, QPushButton
+from PySide6.QtWidgets import (
+    QWidget,
+    QSplitter,
+    QVBoxLayout,
+    QPlainTextEdit,
+    QPushButton,
+)
 from PySide6.QtCore import Qt
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
 from model_table import DuckDBTableModel
+
 
 class SQLExecutionWidget(QWidget):
     def __init__(self, connection: DuckDBPyConnection, parent: QWidget = None):
