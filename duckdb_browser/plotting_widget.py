@@ -5,14 +5,40 @@ from PySide6.QtWidgets import (
     QComboBox,
     QLabel,
     QSizePolicy,
+    QToolTip,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPointF
 from PySide6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QBarSeries, QBarSet, QValueAxis, QBoxPlotSeries, QBoxSet, QBarCategoryAxis
-from PySide6.QtGui import QPainter, QColor
+from PySide6.QtGui import QPainter, QColor, QFont
 import pandas as pd
 import numpy as np
 from typing import Optional, List, Tuple
 from enum import Enum, auto
+
+class CustomToolTip(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.ToolTip)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(10, 10, 10, 10)
+        self.label = QLabel(self)
+        self.label.setStyleSheet("""
+            QLabel {
+                background-color: rgba(25, 25, 25, 230);
+                color: white;
+                border-radius: 5px;
+                padding: 10px;
+                font-size: 12px;
+            }
+        """)
+        self.layout.addWidget(self.label)
+
+    def show_tooltip(self, text, pos):
+        self.label.setText(text)
+        self.adjustSize()
+        super().show()
+        self.move(pos)
 
 class PlotType(Enum):
     SCATTER = auto()
@@ -32,6 +58,9 @@ class PlottingWidget(QWidget):
         self.color_combo = QComboBox()
         self.plot_type_combo = QComboBox()
         self.plot_type_combo.addItems([plot_type.name.capitalize().replace('_', ' ') for plot_type in PlotType])
+
+        # Create custom tooltip
+        self.tooltip = CustomToolTip(self)
 
         # Set minimum width for combo boxes
         min_width = 150
@@ -180,11 +209,13 @@ class PlottingWidget(QWidget):
                 color_data = valid_data[valid_data['color'] == color]
                 for y, x, y_plot, x_plot in zip(color_data['y'], color_data['x'], color_data['y_plot'], color_data['x_plot']):
                     point = series.append(float(x_plot), float(y_plot))
+                series.hovered.connect(self._show_tooltip)
                 self.chart.addSeries(series)
         else:
             series = QScatterSeries()
             for y, x, y_plot, x_plot in zip(valid_data['y'], valid_data['x'], valid_data['y_plot'], valid_data['x_plot']):
                 point = series.append(float(x_plot), float(y_plot))
+            series.hovered.connect(self._show_tooltip)
             self.chart.addSeries(series)
 
     def _plot_line(self, valid_data: pd.DataFrame, color_col: Optional[str]) -> None:
@@ -198,11 +229,13 @@ class PlottingWidget(QWidget):
                 color_data = valid_data[valid_data['color'] == color]
                 for y_plot, x_plot in zip(color_data['y_plot'], color_data['x_plot']):
                     point = series.append(float(x_plot), float(y_plot))
+                series.hovered.connect(self._show_tooltip)
                 self.chart.addSeries(series)
         else:
             series = QLineSeries()
             for y_plot, x_plot in zip(valid_data['y_plot'], valid_data['x_plot']):
                 point = series.append(float(x_plot), float(y_plot))
+            series.hovered.connect(self._show_tooltip)
             self.chart.addSeries(series)
 
     def _plot_bar(self, valid_data: pd.DataFrame, color_col: str, x_col: str) -> None:
@@ -315,3 +348,12 @@ class PlottingWidget(QWidget):
             self.chart.setAxisX(new_axis, self.chart.series()[0])
         else:
             axis.setCategories(categories)
+
+    def _show_tooltip(self, point: QPointF, state: bool):
+        if state:
+            x = self.chart.mapToValue(point).x()
+            y = self.chart.mapToValue(point).y()
+            tooltip_text = f"X: {x:.2f}<br>Y: {y:.2f}"
+            self.tooltip.show_tooltip(tooltip_text, self.chart_view.mapToGlobal(self.chart.mapToPosition(point).toPoint()))
+        else:
+            self.tooltip.hide()
