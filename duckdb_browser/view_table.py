@@ -38,7 +38,7 @@ class FilterHeader(QHeaderView):
         self.adjustPositions()
 
     def adjustPositions(self) -> None:
-        if hasattr(self, 'filter_widgets') and self.filter_widgets:
+        if hasattr(self, "filter_widgets") and self.filter_widgets:
             header_height = super().sizeHint().height()
             for index, widget in enumerate(self.filter_widgets):
                 widget.setGeometry(
@@ -63,13 +63,14 @@ class FilterHeader(QHeaderView):
             widget.clear()
 
 
-
 class CombinedHeaderWidget(QWidget):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.filter_header = FilterHeader(self)
-        self.filter_header.setFilterWidgets(0)  # Initialize with 0 columns, update later when model is set
-        
+        self.filter_header.setFilterWidgets(
+            0
+        )  # Initialize with 0 columns, update later when model is set
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
