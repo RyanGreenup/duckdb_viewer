@@ -44,7 +44,7 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
         text_format = QTextCharFormat()
         text_format.setForeground(QColor(color))
         if font_style == FontStyle.BOLD:
-            text_format.setFontWeight(QFont.Bold)
+            text_format.setFontWeight(QFont.Weight.Bold)
         elif font_style == FontStyle.ITALIC:
             text_format.setFontItalic(True)
         return text_format
