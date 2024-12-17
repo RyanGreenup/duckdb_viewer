@@ -128,12 +128,18 @@ class SQLTextEdit(QTextEdit):
             if e.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return, Qt.Key.Key_Tab):
                 e.ignore()
                 return
-            elif e.key() == Qt.Key.Key_N and e.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            elif (
+                e.key() == Qt.Key.Key_N
+                and e.modifiers() & Qt.KeyboardModifier.ControlModifier
+            ):
                 self.completer.setCurrentRow(self.completer.currentRow() + 1)
                 self.completer.popup().setCurrentIndex(self.completer.currentIndex())
                 e.accept()
                 return
-            elif e.key() == Qt.Key.Key_P and e.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            elif (
+                e.key() == Qt.Key.Key_P
+                and e.modifiers() & Qt.KeyboardModifier.ControlModifier
+            ):
                 self.completer.setCurrentRow(self.completer.currentRow() - 1)
                 self.completer.popup().setCurrentIndex(self.completer.currentIndex())
                 e.accept()
@@ -141,7 +147,9 @@ class SQLTextEdit(QTextEdit):
 
         super().keyPressEvent(e)
 
-        ctrl_or_shift = e.modifiers() & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier)
+        ctrl_or_shift = e.modifiers() & (
+            Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
+        )
         if ctrl_or_shift and e.text() == "":
             return
 
