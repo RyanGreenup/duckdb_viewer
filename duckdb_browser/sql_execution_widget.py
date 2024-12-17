@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCursor, QTextDocument
+from PySide6.QtGui import QTextCursor
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
 from model_table import DuckDBTableModel
@@ -28,7 +29,7 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
         cursor.setPosition(self.currentBlock().position())
         cursor.setPosition(
             self.currentBlock().position() + self.currentBlock().length(),
-            QTextCursor.KeepAnchor,
+            QTextCursor.SelectionType.KeepAnchor,
         )
         cursor.insertHtml(html)
 
