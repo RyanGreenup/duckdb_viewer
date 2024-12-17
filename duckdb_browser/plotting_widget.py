@@ -463,7 +463,9 @@ class PlottingWidget(QWidget):
         # Add gap at the bottom for x-axis labels
         self.chart.layout().setContentsMargins(0, 0, 0, 40)
 
-    def _set_categories(self, axis: Union[QValueAxis, QBarCategoryAxis], categories: List[str]) -> None:
+    def _set_categories(
+        self, axis: Union[QValueAxis, QBarCategoryAxis], categories: List[str]
+    ) -> None:
         if isinstance(axis, QValueAxis):
             new_axis = QBarCategoryAxis()
             new_axis.append(categories)
