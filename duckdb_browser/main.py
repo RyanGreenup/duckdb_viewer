@@ -178,7 +178,7 @@ class DuckDBTableModel(QAbstractTableModel):
         self.connection = connection
         self.table_name = table_name
         self._data: DataType = []
-        self.headers: List[str] = []
+        self.headers: List[Tuple[str, str]] = []  # (column_name, column_type)
         self._fetch_data()
         self._sort_column = 0
         self._sort_order = Qt.SortOrder.AscendingOrder
@@ -186,10 +186,15 @@ class DuckDBTableModel(QAbstractTableModel):
         self._filtered_data: DataType = self._data
 
     def _fetch_data(self) -> None:
+        # Fetch column information
+        columns_query = f"PRAGMA table_info('{self.table_name}')"
+        columns_info = self.connection.execute(columns_query).fetchall()
+        self.headers = [(col[1], col[2]) for col in columns_info]  # (name, type)
+
+        # Fetch data
         query = f"SELECT * FROM {self.table_name}"
         df: pd.DataFrame = self.connection.execute(query).df()
         self._data = df.values.tolist()
-        self.headers = df.columns.tolist()
         self._filtered_data = self._data
 
     def set_filter(self, column: int, filter_text: str) -> None:
@@ -245,11 +250,8 @@ class DuckDBTableModel(QAbstractTableModel):
         orientation: Qt.Orientation,
         role: int = Qt.ItemDataRole.DisplayRole,
     ) -> Any:
-        if (
-            orientation == Qt.Orientation.Horizontal
-            and role == Qt.ItemDataRole.DisplayRole
-        ):
-            return self.headers[section]
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+            return f"{self.headers[section][0]}\n({self.headers[section][1]})"
         return None
 
     def setData(
@@ -351,18 +353,33 @@ class FilterHeader(QHeaderView):
         for widget in self.filter_widgets:
             widget.clear()
 
+class TableHeader(QHeaderView):
+    def __init__(self, orientation, parent=None):
+        super().__init__(orientation, parent)
+        self.setSectionsClickable(True)
+        self.setSortIndicatorShown(True)
+
+    def sizeHint(self):
+        size = super().sizeHint()
+        if self.orientation() == Qt.Orientation.Horizontal:
+            size.setHeight(size.height() * 2)  # Double the height for two lines
+        return size
+
 class TableWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._main_layout = QVBoxLayout(self)
         self.table_view = QTableView(self)
         self.filter_header = FilterHeader(self.table_view)
-        self.table_view.setHorizontalHeader(self.filter_header)
+        self.table_header = TableHeader(Qt.Orientation.Horizontal, self.table_view)
+        self.table_view.setHorizontalHeader(self.table_header)
+        self.table_view.setVerticalHeader(TableHeader(Qt.Orientation.Vertical, self.table_view))
         self._main_layout.addWidget(self.table_view)
 
     def set_model(self, model):
         self.table_view.setModel(model)
         self.filter_header.setFilterWidgets(model.columnCount())
+        self.table_view.setHorizontalHeader(self.table_header)
 
     def clear_filters(self):
         self.filter_header.clearFilters()
@@ -483,7 +500,7 @@ class MainWindow(QMainWindow):
 
         # Create new filter inputs
         for col in range(self.table_model.columnCount()):
-            column_name = self.table_model.headerData(col, Qt.Orientation.Horizontal)
+            column_name, column_type = self.table_model.headers[col]
             placeholder = f"Filter {column_name}"
             line_edit = self.table_widget.add_filter_input(col, placeholder)
             line_edit.textChanged.connect(
@@ -495,13 +512,7 @@ class MainWindow(QMainWindow):
                 line_edit.setFocus()
 
         # Adjust column widths
-        header = self.table_widget.table_view.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-
-        # Set minimum width for each column
-        for col in range(self.table_model.columnCount()):
-            width = self.calculate_column_width(col)
-            self.table_widget.table_view.setColumnWidth(col, width)
+        self.table_widget.table_view.resizeColumnsToContents()
 
         # Enable horizontal scrolling
         self.table_widget.table_view.setHorizontalScrollMode(
