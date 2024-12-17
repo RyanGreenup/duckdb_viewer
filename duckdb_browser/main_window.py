@@ -6,12 +6,11 @@ from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
     QAbstractItemView,
+    QTabWidget,
+    QPlainTextEdit,
 )
 from typing import List, Optional
-from PySide6.QtCore import (
-    Qt,
-    QModelIndex,
-)
+from PySide6.QtCore import Qt, QModelIndex
 import duckdb
 from duckdb import DuckDBPyConnection
 from view_table import TableWidget
@@ -35,6 +34,32 @@ class MainWindow(QMainWindow):
         main_widget = QWidget()
         main_layout = QVBoxLayout(main_widget)
 
+        # Create tab widget
+        self.tab_widget = QTabWidget()
+        main_layout.addWidget(self.tab_widget)
+
+        # Create and add the first tab (current layout)
+        self.tab1 = QWidget()
+        self.tab1_layout = QVBoxLayout(self.tab1)
+        self.create_tab1_content()
+        self.tab_widget.addTab(self.tab1, "Table View")
+
+        # Create and add the second tab (split view)
+        self.tab2 = QWidget()
+        self.tab2_layout = QVBoxLayout(self.tab2)
+        self.create_tab2_content()
+        self.tab_widget.addTab(self.tab2, "Split View")
+
+        # Set central widget
+        self.setCentralWidget(main_widget)
+
+        # Initialize filter inputs list
+        self.filter_inputs: List[QLineEdit] = []
+
+        # Load the specified table or the first table if it exists
+        self.load_initial_table(initial_table)
+
+    def create_tab1_content(self):
         # Create splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
@@ -62,17 +87,30 @@ class MainWindow(QMainWindow):
         splitter.setSizes([200, 600])  # Adjust these values as needed
         splitter.setHandleWidth(20)
 
-        # Add splitter to main layout
-        main_layout.addWidget(splitter)
+        # Add splitter to tab1 layout
+        self.tab1_layout.addWidget(splitter)
 
-        # Set central widget
-        self.setCentralWidget(main_widget)
+    def create_tab2_content(self):
+        # Create splitter
+        splitter = QSplitter(Qt.Orientation.Vertical)
 
-        # Initialize filter inputs list
-        self.filter_inputs: List[QLineEdit] = []
+        # Create and set up the table widget
+        self.tab2_table_widget = TableWidget()
+        self.tab2_table_widget.table_view.setSortingEnabled(True)
 
-        # Load the specified table or the first table if it exists
-        self.load_initial_table(initial_table)
+        # Create and set up the QPlainTextEdit
+        self.text_edit = QPlainTextEdit()
+
+        # Add widgets to splitter
+        splitter.addWidget(self.tab2_table_widget)
+        splitter.addWidget(self.text_edit)
+
+        # Set splitter sizes
+        splitter.setSizes([400, 200])  # Adjust these values as needed
+        splitter.setHandleWidth(20)
+
+        # Add splitter to tab2 layout
+        self.tab2_layout.addWidget(splitter)
 
     def load_initial_table(self, initial_table: Optional[str] = None) -> None:
         if initial_table:
@@ -118,35 +156,53 @@ class MainWindow(QMainWindow):
     def load_table_or_view(self, name: str, focus_column: Optional[str] = None) -> None:
         self.table_model = DuckDBTableModel(self.con, name)
         self.table_widget.set_model(self.table_model)
+        self.tab2_table_widget.set_model(self.table_model)
 
         # Clear existing filter inputs
         self.table_widget.clear_filters()
+        self.tab2_table_widget.clear_filters()
         self.filter_inputs = []
 
-        # Create new filter inputs
+        # Create new filter inputs for both table widgets
         for col in range(self.table_model.columnCount()):
             column_name, column_type = self.table_model.headers[col]
             placeholder = f"Filter {column_name}"
-            line_edit = self.table_widget.add_filter_input(col, placeholder)
-            if line_edit:
-                line_edit.textChanged.connect(
+            
+            line_edit1 = self.table_widget.add_filter_input(col, placeholder)
+            line_edit2 = self.tab2_table_widget.add_filter_input(col, placeholder)
+            
+            if line_edit1:
+                line_edit1.textChanged.connect(
                     lambda text, column=col: self.apply_filter(text, column)
                 )
-                self.filter_inputs.append(line_edit)
+                self.filter_inputs.append(line_edit1)
 
-                if focus_column and column_name == focus_column:
-                    line_edit.setFocus()
+            if line_edit2:
+                line_edit2.textChanged.connect(
+                    lambda text, column=col: self.apply_filter(text, column)
+                )
+
+            if focus_column and column_name == focus_column:
+                if line_edit1:
+                    line_edit1.setFocus()
+                if line_edit2:
+                    line_edit2.setFocus()
 
         # Adjust column widths
         self.table_widget.table_view.resizeColumnsToContents()
+        self.tab2_table_widget.table_view.resizeColumnsToContents()
 
         # Enable horizontal scrolling
         self.table_widget.table_view.setHorizontalScrollMode(
             QAbstractItemView.ScrollMode.ScrollPerPixel
         )
+        self.tab2_table_widget.table_view.setHorizontalScrollMode(
+            QAbstractItemView.ScrollMode.ScrollPerPixel
+        )
 
-        # Update the main layout
+        # Update the main layouts
         self.table_widget.get_main_layout().update()
+        self.tab2_table_widget.get_main_layout().update()
 
     def calculate_column_width(self, column: int) -> int:
         font_metrics = self.table_widget.table_view.fontMetrics()
