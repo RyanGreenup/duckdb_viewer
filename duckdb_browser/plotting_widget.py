@@ -464,9 +464,10 @@ class PlottingWidget(QWidget):
             x = self.chart.mapToValue(point).x()
             y = self.chart.mapToValue(point).y()
             tooltip_text = f"X: {x:.2f}<br>Y: {y:.2f}"
+            global_pos = self.chart_view.mapToGlobal(self.chart.mapToPosition(point).toPoint())
             self.tooltip.show_tooltip(
                 tooltip_text,
-                self.chart_view.mapToGlobal(self.chart.mapToPosition(point).toPoint()),
+                QPointF(global_pos)
             )
         else:
             self.tooltip.hide()
