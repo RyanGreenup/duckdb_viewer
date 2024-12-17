@@ -53,7 +53,8 @@ class DuckDBTableModel(QAbstractTableModel):
         query = f"SELECT * FROM {self.table_name}"
         df: pd.DataFrame = self.connection.execute(query).df()
         self._data = df.values.tolist()
-        self._filtered_data = self._data.copy()
+        self._data = [list(row) for row in self._data]  # Ensure each row is a list
+        self._filtered_data = [row.copy() for row in self._data]  # Deep copy of _data
         self._filters = [""] * len(self.headers)
 
     def _fetch_data_from_result(self, result: Any) -> None:
