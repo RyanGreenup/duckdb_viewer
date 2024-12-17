@@ -295,14 +295,14 @@ class PlottingWidget(QWidget):
             self.chart.addSeries(series)
 
     def _plot_line(self, valid_data: pd.DataFrame, color_col: Optional[str]) -> None:
-        if color_col:
-            unique_colors = valid_data["color"].unique()
+        if color_col and color_col != "None":
+            unique_colors = valid_data[color_col].unique()
             color_map = self._get_color_map(unique_colors)
             for color in unique_colors:
                 series = QLineSeries()
                 series.setName(f"{color_col}: {color}")
                 series.setColor(color_map[color])
-                color_data = valid_data[valid_data["color"] == color]
+                color_data = valid_data[valid_data[color_col] == color]
                 for y_plot, x_plot in zip(color_data["y_plot"], color_data["x_plot"]):
                     series.append(float(x_plot), float(y_plot))
                 series.hovered.connect(self._show_tooltip)
