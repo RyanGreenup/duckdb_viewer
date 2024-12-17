@@ -7,8 +7,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QPalette
-from PySide6.QtGui import QFontWeight
+from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QPalette, QFont
 from enum import Enum
 from view_table import TableWidget
 from duckdb import DuckDBPyConnection
@@ -27,46 +26,41 @@ class FontStyle(Enum):
 class SQLSyntaxHighlighter(QSyntaxHighlighter):
     def __init__(self, parent: QTextEdit) -> None:
         super().__init__(parent)
-        self.lexer: SqlLexer = SqlLexer()
-        self.styles: dict[Token, QTextCharFormat] = self.generate_styles()
+        self.lexer = SqlLexer()
+        self.styles: dict[str, QTextCharFormat] = self.generate_styles()
 
-    def generate_styles(self) -> dict[Token, QTextCharFormat]:
-        styles: dict[Token, QTextCharFormat] = {}
-        styles[Token.Keyword] = self.format_for_token(
-            Token.Keyword, "#007020", FontStyle.BOLD
-        )
-        styles[Token.String] = self.format_for_token(Token.String, "#4070a0")
-        styles[Token.Number] = self.format_for_token(Token.Number, "#40a070")
-        styles[Token.Operator] = self.format_for_token(Token.Operator, "#666666")
-        styles[Token.Punctuation] = self.format_for_token(Token.Punctuation, "#666666")
-        styles[Token.Comment] = self.format_for_token(
-            Token.Comment, "#60a0b0", FontStyle.ITALIC
-        )
+    def generate_styles(self) -> dict[str, QTextCharFormat]:
+        styles: dict[str, QTextCharFormat] = {}
+        styles["Keyword"] = self.format_for_token("#007020", FontStyle.BOLD)
+        styles["String"] = self.format_for_token("#4070a0")
+        styles["Number"] = self.format_for_token("#40a070")
+        styles["Operator"] = self.format_for_token("#666666")
+        styles["Punctuation"] = self.format_for_token("#666666")
+        styles["Comment"] = self.format_for_token("#60a0b0", FontStyle.ITALIC)
         return styles
 
-    def format_for_token(
-        self, token: Token, color: str, font_style: FontStyle = FontStyle.NORMAL
-    ) -> QTextCharFormat:
+    def format_for_token(self, color: str, font_style: FontStyle = FontStyle.NORMAL) -> QTextCharFormat:
         text_format = QTextCharFormat()
         text_format.setForeground(QColor(color))
         if font_style == FontStyle.BOLD:
-            text_format.setFontWeight(QFontWeight.Bold)
+            text_format.setFontWeight(QFont.Bold)
         elif font_style == FontStyle.ITALIC:
             text_format.setFontItalic(True)
         return text_format
 
     def highlightBlock(self, text: str) -> None:
-        for token, value in lex(text, self.lexer):
-            if token in self.styles:
+        for token_type, value in lex(text, self.lexer):
+            token_str = str(token_type)
+            if token_str.split('.')[-1] in self.styles:
                 self.setFormat(
-                    self.currentBlock().position(), len(value), self.styles[token]
+                    self.currentBlock().position(), len(value), self.styles[token_str.split('.')[-1]]
                 )
 
 
 class SQLTextEdit(QTextEdit):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.highlighter = SQLSyntaxHighlighter(self.document())
+        self.highlighter = SQLSyntaxHighlighter(self)
         self.setPlaceholderText("Enter your SQL query here...")
 
     def set_background_color(self, color: QColor) -> None:
