@@ -233,6 +233,7 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage(
             f"Showing {filtered_row_count} of {total_row_count} rows"
         )
+        self.table_widget.adjust_columns()
 
     def create_menu_bar(self) -> None:
         menu_bar = QMenuBar(self)
