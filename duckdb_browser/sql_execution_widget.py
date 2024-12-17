@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from PySide6.QtWidgets import (
     QWidget,
     QSplitter,
@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QCompleter,
 )
 from PySide6.QtCore import Qt, QStringListModel
+from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtGui import (
     QColor,
     QSyntaxHighlighter,
@@ -69,13 +70,13 @@ class SQLSyntaxHighlighter(QSyntaxHighlighter):
 
 
 class SQLCompleter(QCompleter):
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.setModel(QStringListModel())
-        self.setCompletionMode(QCompleter.PopupCompletion)
-        self.setCaseSensitivity(Qt.CaseInsensitive)
+        self.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+        self.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
 
-    def update_completions(self, table_names):
+    def update_completions(self, table_names: List[str]) -> None:
         completions = [
             "SELECT",
             "FROM",
@@ -94,7 +95,14 @@ class SQLCompleter(QCompleter):
             "LEFT JOIN",
             "RIGHT JOIN",
         ] + table_names
-        self.model().setStringList(completions)
+        if isinstance(self.model(), QStringListModel):
+            self.model().setStringList(completions)
+        else:
+            new_model = QStringListModel(completions)
+            self.setModel(new_model)
+
+    def model(self) -> QAbstractItemModel:
+        return super().model()
 
 
 class SQLTextEdit(QTextEdit):
