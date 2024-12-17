@@ -118,6 +118,7 @@ class TableWidget(QWidget):
     def display_error(self, error_message: str) -> None:
         from PySide6.QtGui import QStandardItemModel
         from PySide6.QtCore import Qt
+
         error_model = QStandardItemModel(1, 1)
         error_model.setData(error_model.index(0, 0), error_message, Qt.DisplayRole)
         self.table_view.setModel(error_model)
