@@ -163,49 +163,53 @@ class MainWindow(QMainWindow):
     def on_sidebar_clicked(self, index: QModelIndex) -> None:
         item_type, schema_name, item_name, column_name = self.sidebar_model.get_item_info(index)
 
-        if item_type in ("table", "view"):
+        if item_type in ("table", "view", "base table"):
             self.load_table_or_view(f"{schema_name}.{item_name}")
         elif item_type == "column":
             self.load_table_or_view(f"{schema_name}.{item_name}", focus_column=column_name)
         # Ignore clicks on category items ("Tables" and "Views") and schema items
 
     def load_table_or_view(self, name: str, focus_column: Optional[str] = None) -> None:
-        self.table_model = DuckDBTableModel(self.con, name)
-        self.table_widget.set_model(self.table_model)
+        try:
+            self.table_model = DuckDBTableModel(self.con, name)
+            self.table_widget.set_model(self.table_model)
 
-        # Clear existing filter inputs
-        self.table_widget.clear_filters()
-        self.filter_inputs = []
+            # Clear existing filter inputs
+            self.table_widget.clear_filters()
+            self.filter_inputs = []
 
-        # Create new filter inputs
-        for col in range(self.table_model.columnCount()):
-            column_name = self.table_model.headerData(col, Qt.Orientation.Horizontal)
-            line_edit = self.table_widget.add_filter_input(col, f"Filter {column_name}")
+            # Create new filter inputs
+            for col in range(self.table_model.columnCount()):
+                column_name = self.table_model.headerData(col, Qt.Orientation.Horizontal)
+                line_edit = self.table_widget.add_filter_input(col, f"Filter {column_name}")
 
-            if line_edit:
-                line_edit.textChanged.connect(
-                    lambda text, column=col: self.apply_filter(text, column)
-                )
-                self.filter_inputs.append(line_edit)
-
-            if focus_column and column_name == focus_column:
                 if line_edit:
-                    line_edit.setFocus()
+                    line_edit.textChanged.connect(
+                        lambda text, column=col: self.apply_filter(text, column)
+                    )
+                    self.filter_inputs.append(line_edit)
 
-        # Adjust column widths
-        self.table_widget.table_view.resizeColumnsToContents()
+                if focus_column and column_name == focus_column:
+                    if line_edit:
+                        line_edit.setFocus()
 
-        # Enable horizontal scrolling
-        self.table_widget.table_view.setHorizontalScrollMode(
-            QAbstractItemView.ScrollMode.ScrollPerPixel
-        )
+            # Adjust column widths
+            self.table_widget.table_view.resizeColumnsToContents()
 
-        # Update the main layout
-        self.table_widget.get_main_layout().update()
+            # Enable horizontal scrolling
+            self.table_widget.table_view.setHorizontalScrollMode(
+                QAbstractItemView.ScrollMode.ScrollPerPixel
+            )
 
-        self.status_bar.showMessage(
-            f"Loaded {name} with {self.table_model.rowCount() - 1} rows"
-        )  # Subtract 1 to account for the header row
+            # Update the main layout
+            self.table_widget.get_main_layout().update()
+
+            self.status_bar.showMessage(
+                f"Loaded {name} with {self.table_model.rowCount()} rows"
+            )
+        except Exception as e:
+            self.status_bar.showMessage(f"Error loading {name}: {str(e)}")
+            print(f"Error loading {name}: {str(e)}")
 
     def calculate_column_width(self, column: int) -> int:
         font_metrics = self.table_widget.table_view.fontMetrics()
