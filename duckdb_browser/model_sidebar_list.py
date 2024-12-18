@@ -36,34 +36,44 @@ class TableListModel(QAbstractItemModel):
         super().__init__()
         self.connection = connection
         self.root = DatabaseItem("Database", "root")
-        self.tables_item = DatabaseItem("Tables", "category", self.root)
-        self.views_item = DatabaseItem("Views", "category", self.root)
-        self.root.add_child(self.tables_item)
-        self.root.add_child(self.views_item)
         self._fetch_structure()
 
     def _fetch_structure(self) -> None:
-        # Fetch tables and views
-        query = """
-        SELECT type, name
-        FROM sqlite_master
-        WHERE type IN ('table', 'view')
-        ORDER BY type, name
-        """
-        for item_type, name in self.connection.execute(query).fetchall():
-            parent_item = self.tables_item if item_type == "table" else self.views_item
-            item = DatabaseItem(name, item_type, parent_item)
-            parent_item.add_child(item)
+        # Fetch schemas
+        schemas_query = "SELECT schema_name FROM information_schema.schemata ORDER BY schema_name"
+        for (schema_name,) in self.connection.execute(schemas_query).fetchall():
+            schema_item = DatabaseItem(schema_name, "schema", self.root)
+            self.root.add_child(schema_item)
 
-            # Fetch columns for each table/view
-            columns_query = f"PRAGMA table_info('{name}')"
-            for column_info in self.connection.execute(columns_query).fetchall():
-                column_name = column_info[1]
-                column_type = column_info[2]
-                column_item = DatabaseItem(
-                    f"{column_name} ({column_type})", "column", item
-                )
-                item.add_child(column_item)
+            tables_item = DatabaseItem("Tables", "category", schema_item)
+            views_item = DatabaseItem("Views", "category", schema_item)
+            schema_item.add_child(tables_item)
+            schema_item.add_child(views_item)
+
+            # Fetch tables and views for each schema
+            objects_query = f"""
+            SELECT table_name, table_type
+            FROM information_schema.tables
+            WHERE table_schema = '{schema_name}'
+            ORDER BY table_type, table_name
+            """
+            for table_name, table_type in self.connection.execute(objects_query).fetchall():
+                parent_item = tables_item if table_type == 'BASE TABLE' else views_item
+                item = DatabaseItem(table_name, table_type.lower(), parent_item)
+                parent_item.add_child(item)
+
+                # Fetch columns for each table/view
+                columns_query = f"DESCRIBE {schema_name}.{table_name}"
+                try:
+                    for column_info in self.connection.execute(columns_query).fetchall():
+                        column_name = column_info[0]
+                        column_type = column_info[1]
+                        column_item = DatabaseItem(
+                            f"{column_name} ({column_type})", "column", item
+                        )
+                        item.add_child(column_item)
+                except Exception as e:
+                    print(f"Error fetching columns for {schema_name}.{table_name}: {e}")
 
     def rowCount(
         self, parent: Union[QModelIndex, QPersistentModelIndex] = QModelIndex()
@@ -141,10 +151,13 @@ class TableListModel(QAbstractItemModel):
 
     def get_item_info(
         self, index: Union[QModelIndex, QPersistentModelIndex]
-    ) -> Tuple[str, str, Optional[str]]:
+    ) -> Tuple[str, str, Optional[str], Optional[str]]:
         item = index.internalPointer()
         if item.type == "column":
-            table_name = item.parent.name
-            column_name = item.name.split()[0]  # Remove the type information
-            return item.type, table_name, column_name
-        return item.type, item.name, None
+            table_item = item.parent
+            schema_item = table_item.parent.parent
+            return item.type, schema_item.name, table_item.name, item.name.split()[0]
+        elif item.type in ("table", "view"):
+            schema_item = item.parent.parent
+            return item.type, schema_item.name, item.name, None
+        return item.type, item.name, None, None

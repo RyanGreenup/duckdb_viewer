@@ -106,9 +106,12 @@ class MainWindow(QMainWindow):
         self.sidebar.clicked.connect(self.on_sidebar_clicked)
         self.sidebar.expanded.connect(self.adjust_column_width)
 
-        # Expand the "Tables" and "Views" items by default
-        self.sidebar.expand(self.sidebar_model.index(0, 0, QModelIndex()))
-        self.sidebar.expand(self.sidebar_model.index(1, 0, QModelIndex()))
+        # Expand the root item and all schema items by default
+        root_index = self.sidebar_model.index(0, 0, QModelIndex())
+        self.sidebar.expand(root_index)
+        for row in range(self.sidebar_model.rowCount(root_index)):
+            schema_index = self.sidebar_model.index(row, 0, root_index)
+            self.sidebar.expand(schema_index)
 
         # Create and set up the table widget
         self.table_widget = TableWidget()
@@ -158,13 +161,13 @@ class MainWindow(QMainWindow):
             self.on_sidebar_clicked(first_table_index)
 
     def on_sidebar_clicked(self, index: QModelIndex) -> None:
-        item_type, item_name, column_name = self.sidebar_model.get_item_info(index)
+        item_type, schema_name, item_name, column_name = self.sidebar_model.get_item_info(index)
 
         if item_type in ("table", "view"):
-            self.load_table_or_view(item_name)
+            self.load_table_or_view(f"{schema_name}.{item_name}")
         elif item_type == "column":
-            self.load_table_or_view(item_name, focus_column=column_name)
-        # Ignore clicks on category items ("Tables" and "Views")
+            self.load_table_or_view(f"{schema_name}.{item_name}", focus_column=column_name)
+        # Ignore clicks on category items ("Tables" and "Views") and schema items
 
     def load_table_or_view(self, name: str, focus_column: Optional[str] = None) -> None:
         self.table_model = DuckDBTableModel(self.con, name)
