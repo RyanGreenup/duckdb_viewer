@@ -7,3 +7,5 @@ my_database.db
 .aider.tags.cache.v3
 duckdb_browser.db
 duckdb_browser/__pycache__
+build/main/base_library.zip
+main.spec

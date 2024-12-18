@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, cast, overload
+from typing import List, Optional, Union, cast, overload, Tuple, Any
 from PySide6.QtCore import (
     QPersistentModelIndex,
     Qt,
@@ -6,7 +6,6 @@ from PySide6.QtCore import (
     QAbstractItemModel,
     QObject,
 )
-from typing import Any, Tuple
 from duckdb import DuckDBPyConnection
 
 
@@ -159,9 +158,19 @@ class TableListModel(QAbstractItemModel):
         item: DatabaseItem = index.internalPointer()
         if item.type == "column":
             table_item = item.parent
-            schema_item = table_item.parent.parent
-            return item.type, schema_item.name, table_item.name, item.name.split()[0]
+            schema_item = table_item.parent.parent if table_item and table_item.parent else None
+            return (
+                item.type,
+                schema_item.name if schema_item else "",
+                table_item.name if table_item else "",
+                item.name.split()[0],
+            )
         elif item.type in ("table", "view", "base table"):
-            schema_item = item.parent.parent
-            return item.type, schema_item.name, item.name, None
+            schema_item = item.parent.parent if item.parent else None
+            return (
+                item.type,
+                schema_item.name if schema_item else "",
+                item.name,
+                None,
+            )
         return item.type, item.name, None, None
