@@ -152,12 +152,12 @@ class TableListModel(QAbstractItemModel):
     def get_item_info(
         self, index: Union[QModelIndex, QPersistentModelIndex]
     ) -> Tuple[str, str, Optional[str], Optional[str]]:
-        item = index.internalPointer()
+        item: DatabaseItem = index.internalPointer()
         if item.type == "column":
             table_item = item.parent
             schema_item = table_item.parent.parent
             return item.type, schema_item.name, table_item.name, item.name.split()[0]
-        elif item.type in ("table", "view"):
+        elif item.type in ("table", "view", "base table"):
             schema_item = item.parent.parent
             return item.type, schema_item.name, item.name, None
         return item.type, item.name, None, None

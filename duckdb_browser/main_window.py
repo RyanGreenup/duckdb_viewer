@@ -164,13 +164,22 @@ class MainWindow(QMainWindow):
         item_type, schema_name, item_name, column_name = self.sidebar_model.get_item_info(index)
 
         if item_type in ("table", "view", "base table"):
-            self.load_table_or_view(f"{schema_name}.{item_name}")
+            if schema_name and item_name:
+                full_name = f"{schema_name}.{item_name}"
+                self.load_table_or_view(full_name)
+            else:
+                print(f"Invalid table/view selection: schema={schema_name}, name={item_name}")
         elif item_type == "column":
-            self.load_table_or_view(f"{schema_name}.{item_name}", focus_column=column_name)
+            if schema_name and item_name:
+                full_name = f"{schema_name}.{item_name}"
+                self.load_table_or_view(full_name, focus_column=column_name)
+            else:
+                print(f"Invalid column selection: schema={schema_name}, table={item_name}, column={column_name}")
         # Ignore clicks on category items ("Tables" and "Views") and schema items
 
     def load_table_or_view(self, name: str, focus_column: Optional[str] = None) -> None:
         try:
+            print(f"Attempting to load: {name}")  # Debug print
             self.table_model = DuckDBTableModel(self.con, name)
             self.table_widget.set_model(self.table_model)
 
@@ -208,8 +217,9 @@ class MainWindow(QMainWindow):
                 f"Loaded {name} with {self.table_model.rowCount()} rows"
             )
         except Exception as e:
-            self.status_bar.showMessage(f"Error loading {name}: {str(e)}")
-            print(f"Error loading {name}: {str(e)}")
+            error_msg = f"Error loading {name}: {str(e)}"
+            self.status_bar.showMessage(error_msg)
+            print(error_msg)
 
     def calculate_column_width(self, column: int) -> int:
         font_metrics = self.table_widget.table_view.fontMetrics()
