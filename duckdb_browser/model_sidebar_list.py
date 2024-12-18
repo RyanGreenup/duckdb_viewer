@@ -40,7 +40,7 @@ class TableListModel(QAbstractItemModel):
 
     def _fetch_structure(self) -> None:
         # Fetch schemas
-        schemas_query = "SELECT schema_name FROM information_schema.schemata ORDER BY schema_name"
+        schemas_query = "SELECT DISTINCT schema_name FROM information_schema.schemata ORDER BY schema_name"
         for (schema_name,) in self.connection.execute(schemas_query).fetchall():
             schema_item = DatabaseItem(schema_name, "schema", self.root)
             self.root.add_child(schema_item)
