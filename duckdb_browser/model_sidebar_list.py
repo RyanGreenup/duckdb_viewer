@@ -57,15 +57,19 @@ class TableListModel(QAbstractItemModel):
             WHERE table_schema = '{schema_name}'
             ORDER BY table_type, table_name
             """
-            for table_name, table_type in self.connection.execute(objects_query).fetchall():
-                parent_item = tables_item if table_type == 'BASE TABLE' else views_item
+            for table_name, table_type in self.connection.execute(
+                objects_query
+            ).fetchall():
+                parent_item = tables_item if table_type == "BASE TABLE" else views_item
                 item = DatabaseItem(table_name, table_type.lower(), parent_item)
                 parent_item.add_child(item)
 
                 # Fetch columns for each table/view
                 columns_query = f"DESCRIBE {schema_name}.{table_name}"
                 try:
-                    for column_info in self.connection.execute(columns_query).fetchall():
+                    for column_info in self.connection.execute(
+                        columns_query
+                    ).fetchall():
                         column_name = column_info[0]
                         column_type = column_info[1]
                         column_item = DatabaseItem(
