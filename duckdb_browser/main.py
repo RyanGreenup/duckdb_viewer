@@ -8,7 +8,9 @@ import typer
 import signal
 from main_window import MainWindow
 
+app = typer.Typer(pretty_exceptions_enable=False)
 
+@app.command()
 def main(db_path: str = "duckdb_browser.db", table_name: Optional[str] = None) -> None:
     app = QApplication(sys.argv)
     window = MainWindow(db_path=db_path, initial_table=table_name)
@@ -18,7 +20,7 @@ def main(db_path: str = "duckdb_browser.db", table_name: Optional[str] = None) -
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    app()
 
 
 # Footnotes
