@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from typing import List, Optional, Callable
-from PySide6.QtCore import Qt, QModelIndex, Signal
+from PySide6.QtCore import QCoreApplication, Qt, QModelIndex, Signal
 import duckdb
 from duckdb import DuckDBPyConnection
 from view_table import TableWidget
@@ -94,6 +94,32 @@ class MainWindow(QMainWindow):
         # Load the specified table or the first table if it exists
         self.load_initial_table(initial_table)
 
+    def on_filter(self):
+        """Filter the sidebar tree while preserving expansion state.
+
+        The tree's fold/expansion state is saved before filtering and restored after
+        rebuilding the tree with the new filter. This maintains the user's view of
+        the tree structure even as items are filtered in/out.
+        """
+        # Set the tree view reference before exporting state
+        self.sidebar_model.tree_view = self.sidebar
+        fold_state = self.sidebar_model.export_fold_state()
+
+        filter_text = self.filter_bar.text()
+        if filter_text == "":
+            filter_text = None
+        self.sidebar_model.filter_string = filter_text
+
+        # Update the model with the new filter
+        self.sidebar_model.update_filter(filter_text)
+
+        # Ensure UI is updated before restoring state
+        QCoreApplication.processEvents()
+        self.sidebar_model.restore_fold_state(self.sidebar, fold_state)
+
+
+
+
     def create_tab1_content(self) -> None:
         # Create splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -101,6 +127,12 @@ class MainWindow(QMainWindow):
         # Create and set up the sidebar tree view
         self.sidebar = QTreeView()
         self.sidebar_model = TableListModel(self.con)
+
+        # Create the Filter Bar
+        self.filter_bar = QLineEdit()
+        self.filter_bar.setPlaceholderText("Filter Tables")
+        self.filter_bar.textChanged.connect(self.on_filter)
+
         self.sidebar.setModel(self.sidebar_model)
         self.sidebar.setHeaderHidden(True)
         self.sidebar.clicked.connect(self.on_sidebar_clicked)
@@ -118,7 +150,11 @@ class MainWindow(QMainWindow):
         self.table_widget.table_view.setSortingEnabled(True)
 
         # Add views to splitter
-        splitter.addWidget(self.sidebar)
+        self.sidebar_container = QWidget()
+        self.sidebar_layout = QVBoxLayout(self.sidebar_container)
+        self.sidebar_layout.addWidget(self.filter_bar)
+        self.sidebar_layout.addWidget(self.sidebar)
+        splitter.addWidget(self.sidebar_container)
         splitter.addWidget(self.table_widget)
 
         # Set splitter sizes
@@ -161,20 +197,26 @@ class MainWindow(QMainWindow):
             self.on_sidebar_clicked(first_table_index)
 
     def on_sidebar_clicked(self, index: QModelIndex) -> None:
-        item_type, schema_name, item_name, column_name = self.sidebar_model.get_item_info(index)
+        item_type, schema_name, item_name, column_name = (
+            self.sidebar_model.get_item_info(index)
+        )
 
         if item_type in ("table", "view", "base table"):
             if schema_name and item_name:
                 full_name = f"{schema_name}.{item_name}"
                 self.load_table_or_view(full_name)
             else:
-                print(f"Invalid table/view selection: schema={schema_name}, name={item_name}")
+                print(
+                    f"Invalid table/view selection: schema={schema_name}, name={item_name}"
+                )
         elif item_type == "column":
             if schema_name and item_name:
                 full_name = f"{schema_name}.{item_name}"
                 self.load_table_or_view(full_name, focus_column=column_name)
             else:
-                print(f"Invalid column selection: schema={schema_name}, table={item_name}, column={column_name}")
+                print(
+                    f"Invalid column selection: schema={schema_name}, table={item_name}, column={column_name}"
+                )
         # Ignore clicks on category items ("Tables" and "Views") and schema items
 
     def load_table_or_view(self, name: str, focus_column: Optional[str] = None) -> None:
@@ -189,8 +231,12 @@ class MainWindow(QMainWindow):
 
             # Create new filter inputs
             for col in range(self.table_model.columnCount()):
-                column_name = self.table_model.headerData(col, Qt.Orientation.Horizontal)
-                line_edit = self.table_widget.add_filter_input(col, f"Filter {column_name}")
+                column_name = self.table_model.headerData(
+                    col, Qt.Orientation.Horizontal
+                )
+                line_edit = self.table_widget.add_filter_input(
+                    col, f"Filter {column_name}"
+                )
 
                 if line_edit:
                     line_edit.textChanged.connect(
